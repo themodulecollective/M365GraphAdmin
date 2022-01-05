@@ -8,7 +8,7 @@
     # SharePoint Online
     # Here Be Dragons - SPO
 
-#Notes: ToDo items are placed hierarchically. Examples: ToDos for the entire module, place at top. ToDo for a Section, place at top of section. ToDo for a specific function, place within function at top.
+# Notes: ToDo items are placed hierarchically. Examples: ToDos for the entire module, place at top. ToDo for a Section, place at top of section. ToDo for a specific function, place within function at top.
 
 ## ToDo: Discuss Current Use of Graph Beta vs v1.0
 
@@ -162,7 +162,6 @@ function Get-GraphUserLastSignIn {
     $response = Invoke-RestMethod @Account_params
     $response.signInActivity.lastsignindatetime
 }
-
 # Licenses
 function Get-GraphUserSkus {
     [CmdletBinding()]

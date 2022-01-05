@@ -1,8 +1,18 @@
+# Sections:
+    # Access Tokens
+    # AzureAD Administration
+        # Users
+        # Licenses
+        # Groups
+    # Mail
+    # SharePoint Online
+    # Here Be Dragons - SPO
+
 #Notes: ToDo items are placed hierarchically. Examples: ToDos for the entire module, place at top. ToDo for a Section, place at top of section. ToDo for a specific function, place within function at top.
 
 ## ToDo: Discuss Current Use of Graph Beta vs v1.0
 
-# Access Tokens
+# ACCESS TOKENS
 ## ToDo: Function to trigger Auth flow to existing module with application permissions for functions in this module
 function Get-GraphAzureKey {
 
@@ -52,7 +62,8 @@ function Get-GraphAPIKey{
     $Script:GraphAPIKey = $ConnectGraph.access_token
 }
 
-# AzureAD Administration
+# AZUREAD ADMINISTRATION
+# Users
 function Get-GraphUser {
 ## ToDo: Validate SearchString param. Possibly only searching DisplayName.
     [CmdletBinding()]
@@ -151,6 +162,8 @@ function Get-GraphUserLastSignIn {
     $response = Invoke-RestMethod @Account_params
     $response.signInActivity.lastsignindatetime
 }
+
+# Licenses
 function Get-GraphUserSkus {
     [CmdletBinding()]
     param (
@@ -278,7 +291,7 @@ function Remove-GraphGroupMember {
     Invoke-RestMethod @Account_params
 }
 
-# Mail
+# MAIL
 ## ToDo: Discuss inclusion in module. Its cool, but dangerous. Allows user to send as any user in the tenant. Originally used it to replace Send-Mailmessage since its now considered insecure. The URI can be updated to for "me" instead of setting the SenderID, but if the App registration is using Application perms instead of delegated, I think that will fail.
 function Send-GraphMessage {
     [CmdletBinding()]
@@ -316,7 +329,7 @@ function Send-GraphMessage {
     Invoke-RestMethod @Account_params    
 }
 
-# SharePoint Online
+# SHAREPOINT ONLINE
 ## ToDo: Do we want to add in WebURL lookup in addtion to the current SiteID params?
 function Get-GraphSite {
 ## ToDo: Check Graph for filter of personal sites in query instead of in PS. Fix usablilty language for params all and no personal sites. Setting -All and -NoPersonalSites currently runs All 2x. If no filtering in graph endpoint, then combine All and NoPersonalSites into same IF by adding IF.
@@ -440,7 +453,7 @@ function Get-GraphListItem {
     }
 }
 
-# HERE BE DRAGONS
+# HERE BE DRAGONS - SPO
 #Notes: These were written to solve the problem of exporting data in a headless Azure Automation script. Exportto-CSV isn't an option because you can't access the disk of the server after the session is closed. So i wanted "Exportto-SPOList". They work, but were created with the specific scripts i was writing in mind. As a result, they are not fully functional and need a hard review of what they actually do and how, BUT its really useful in certain situations. :)
 function New-GraphList {
     [CmdletBinding()]

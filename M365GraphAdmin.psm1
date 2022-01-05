@@ -3,8 +3,9 @@
 ## ToDo: Discuss Current Use of Graph Beta vs v1.0
 
 # Access Tokens
-function Get-GraphAzureKey {
 ## ToDo: Function to trigger Auth flow to existing module with application permissions for functions in this module
+function Get-GraphAzureKey {
+
     $ClientID = '1950a258-227b-4e31-a9cf-717495945fc2'
     $TenantID = 'common'
     $Resource = "https://graph.microsoft.com/"

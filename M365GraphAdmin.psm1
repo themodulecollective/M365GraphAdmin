@@ -14,6 +14,7 @@
 
 # ACCESS TOKENS
 ## ToDo: Function to trigger Auth flow to existing module with application permissions for functions in this module
+## ToDo: Combine all into single function Get-GraphAccessToken?
 function Get-GraphAzureKey {
 
     $ClientID = '1950a258-227b-4e31-a9cf-717495945fc2'
@@ -191,7 +192,10 @@ function Get-GraphSkus {
 # Groups
 ## ToDo: Add Set-GraphGroup?
 function Get-GraphGroup {
-## ToDo: Clean up, add -all for consisency, add objectid, SearchString is searching DisplayName
+## ToDo: Clean up
+## ToDo: add -all for consisency
+## ToDo: add objectid
+## ToDo: SearchString is searching DisplayName only. Sufficient verbiage and functionality?
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $false)]$SearchString
@@ -253,7 +257,9 @@ function Get-GraphGroupMember {
     $all_results
 }
 function Add-GraphGroupMember {
-## ToDo Replace GroupID with ObjectId for consistency. Replace Member with UserPrincipalName. Add UserObjectID param
+## ToDo: Replace GroupID with ObjectId for consistency
+## ToDo: Replace Member with UserPrincipalName
+## ToDo: Add UserObjectID param
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$GroupID,
@@ -274,8 +280,9 @@ function Add-GraphGroupMember {
     Invoke-RestMethod @Account_params
 }
 function Remove-GraphGroupMember {
-## ToDo Replace GroupID with ObjectId for consistency. Replace Member with UserPrincipalName. Add UserObjectID param
-    [CmdletBinding()]
+## ToDo: Replace GroupID with ObjectId for consistency
+## ToDo: Replace Member with UserPrincipalName
+## ToDo: Add UserObjectID param    [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$GroupID,
         [Parameter(Mandatory)]$Member
@@ -331,7 +338,8 @@ function Send-GraphMessage {
 # SHAREPOINT ONLINE
 ## ToDo: Do we want to add in WebURL lookup in addtion to the current SiteID params?
 function Get-GraphSite {
-## ToDo: Check Graph for filter of personal sites in query instead of in PS. Fix usablilty language for params all and no personal sites. Setting -All and -NoPersonalSites currently runs All 2x. If no filtering in graph endpoint, then combine All and NoPersonalSites into same IF by adding IF.
+## ToDo: Check Graph for filter of personal sites in query instead of in PS
+## ToDo: Fix usablilty language for params all and no personal sites. Setting -All and -NoPersonalSites currently runs All 2x. If no filtering in graph endpoint, then combine All and NoPersonalSites into same IF by adding IF.
     [CmdletBinding(DefaultParameterSetName = 'SID')]
     Param(
         [Parameter(Mandatory = $False,
@@ -395,7 +403,7 @@ function Get-GraphSite {
     }
 }
 function Get-GraphSitePermissions {
-## ToDo: review this function. I think its retrieving sharing permissions within the site, but I don't remember. Not even sure if it works.
+## ToDo: Review this function. I think its retrieving sharing permissions within the site, but I don't remember. Not even sure if it works.
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $false)]$SiteId

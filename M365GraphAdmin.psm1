@@ -62,7 +62,28 @@ function Get-GraphAPIKey {
     $ConnectGraph = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token" -Method POST -Body $Body
     $Script:GraphAPIKey = $ConnectGraph.access_token
 }
-
+function Connect-HGMsolService {
+    ## todo: add token refresh
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory)]$ApplicationID,
+        [Parameter(Mandatory)]$TenantId,
+        [Parameter(Mandatory)]$AccessSecret
+    )
+    $Body = @{    
+        Grant_Type    = "client_credentials"
+        Scope         = "https://graph.microsoft.com/.default"
+        client_Id     = $ApplicationID
+        Client_Secret = $AccessSecret
+    } 
+    $ConnectGraph = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token" -Method POST -Body $Body
+    $Script:GraphAPIKey = $ConnectGraph.access_token
+}
+function Consent-HGMsolService {
+    ## todo: add administrator consent flow
+    ## todo: add token refresh
+    start "https://login.microsoftonline.com/126ccd5c-dfff-496c-a52c-bf3844d430ec/adminconsent?client_id=f6557fc2-d4a5-4266-8f4c-2bdcd0cd9a2d&state=12345&redirect_uri=https://localhost/myapp/permissions"
+}
 # AZUREAD ADMINISTRATION
 # Users
 function Get-GraphUser {

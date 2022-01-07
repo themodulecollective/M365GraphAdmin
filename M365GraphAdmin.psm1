@@ -101,24 +101,26 @@ function Get-GraphUser {
     }
     if ($All) {
         $URI = "https://graph.microsoft.com/beta/users"
-        $account_params.add("URI", "$URI")
-        $Results = Invoke-RestMethod @Account_params
-        $all_results = @(foreach ($Value in $Results.value) {
-                $Value
+        function Get-AllUsers {
+            [CmdletBinding()]
+            param (
+                [Parameter(Mandatory = $True)][string]$URI
+            )
+            $account_params = @{
+                Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
+                URI         = $URI
+                Method      = 'GET'
+                ContentType = 'application/json'
             }
-            while ($null -ne $results."@odata.nextlink") {
-                $account_params = @{
-                    Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-                    Uri         = $results."@odata.nextlink"
-                    Method      = 'GET'
-                    ContentType = 'application/json'
-                }
-                $Results = Invoke-RestMethod @Account_params
-                foreach ($Value in $Results.value) {
-                    $Value
-                }
-            })
-        $all_results
+            $Result = Invoke-RestMethod @Account_params
+            if ($results."@odata.nextlink") {
+                Get-AllUsers -Uri $results."@odata.nextlink"
+            }
+            elseif (!$results."@odata.nextlink") {
+                $Result.Value
+            }
+        }
+        Get-AllUsers -Uri $URI
     }   
     if ($UserPrincipalName) {
         $URI = "https://graph.microsoft.com/beta/users/$userprincipalname"

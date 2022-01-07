@@ -1,4 +1,5 @@
 # Sections:
+# Helper Functions - Not for inclusion in User Import
 # Access Tokens
 # AzureAD Administration
 # Users
@@ -12,6 +13,32 @@
 
 ## ToDo: Discuss Current Use of Graph Beta vs v1.0
 ## ToDo: Replace all OData.NextLink loops with recursive functions - see get-graphuser
+
+# HELPER FUNCTIONS
+
+function Get-NextPage {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $True)][string]$URI,
+        [Switch]$SearchDisplayName
+    )
+    $account_params = @{
+        Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
+        URI         = $URI
+        Method      = 'GET'
+        ContentType = 'application/json'
+    }
+    if ($SearchDisplayName) {
+        $account_params.headers.add("ConsistencyLevel", "eventual")
+    }
+    $Result = Invoke-RestMethod @Account_params
+    if ($results."@odata.nextlink") {
+        Get-NextPage -Uri $results."@odata.nextlink"
+    }
+    elseif (!$results."@odata.nextlink") {
+        $Result.Value
+    }
+}
 
 # ACCESS TOKENS
 ## ToDo: Function to trigger Auth flow to existing module with application permissions for functions in this module
@@ -88,52 +115,28 @@ function Consent-HGMsolService {
 # AZUREAD ADMINISTRATION
 # Users
 function Get-GraphUser {
-    ## ToDo: Validate SearchString param. Possibly only searching DisplayName.
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $False)]$UserPrincipalName,
-        [Parameter(Mandatory = $False)]$SearchString,
+        [Parameter(Mandatory = $False)]$SearchDisplayName,
         [Switch]$All
     )
-    $account_params = @{
-        Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-        Method      = 'GET'
-        ContentType = 'application/json'
-    }
     if ($All) {
         $URI = "https://graph.microsoft.com/beta/users"
-        function Get-AllUsers {
-            [CmdletBinding()]
-            param (
-                [Parameter(Mandatory = $True)][string]$URI
-            )
-            $account_params = @{
-                Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-                URI         = $URI
-                Method      = 'GET'
-                ContentType = 'application/json'
-            }
-            $Result = Invoke-RestMethod @Account_params
-            if ($results."@odata.nextlink") {
-                Get-AllUsers -Uri $results."@odata.nextlink"
-            }
-            elseif (!$results."@odata.nextlink") {
-                $Result.Value
-            }
-        }
-        Get-AllUsers -Uri $URI
+        Get-NextPage -Uri $URI
     }   
     if ($UserPrincipalName) {
-        $URI = "https://graph.microsoft.com/beta/users/$userprincipalname"
-        $account_params.add("URI", "$URI")
+        $account_params = @{
+            Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
+            URI         = "https://graph.microsoft.com/beta/users/$userprincipalname"
+            Method      = 'GET'
+            ContentType = 'application/json'
+        }
         Invoke-RestMethod @Account_params
     }
-    if ($SearchString) {
-        $URI = "https://graph.microsoft.com/beta/users?`$search=`"displayName:$SearchString`""
-        $account_params.add("URI", "$URI")
-        $account_params.headers.add("ConsistencyLevel", "eventual")
-        $results = Invoke-RestMethod @Account_params
-        $results.value
+    if ($SearchDisplayName) {
+        $URI = "https://graph.microsoft.com/beta/users?`$search=`"displayName:$SearchDisplayName`""
+        Get-NextPage -uri $uri -SearchDisplayName
     }
 }
 function Set-GraphUser {
@@ -271,21 +274,21 @@ function Get-GraphGroupMember {
     }
     $Results = Invoke-RestMethod @Account_params
     $all_results = @(foreach ($Value in $Results.value) {
-        $Value
-    }
-    while ($null -ne $results."@odata.nextlink") {
-        $account_params = @{
-            Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-            Uri         = $results."@odata.nextlink"
-            Method      = 'GET'
-            ContentType = 'application/json'
-        }
-        $Results = Invoke-RestMethod @Account_params
-        foreach ($Value in $Results.value) {
             $Value
         }
-    })
-$all_results
+        while ($null -ne $results."@odata.nextlink") {
+            $account_params = @{
+                Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
+                Uri         = $results."@odata.nextlink"
+                Method      = 'GET'
+                ContentType = 'application/json'
+            }
+            $Results = Invoke-RestMethod @Account_params
+            foreach ($Value in $Results.value) {
+                $Value
+            }
+        })
+    $all_results
 }
 function Add-GraphGroupMember {
     ## ToDo: Replace GroupID with ObjectId for consistency
@@ -397,21 +400,21 @@ function Get-GraphSite {
         }
         $Results = Invoke-RestMethod @Account_params
         $all_results = @(foreach ($Value in $Results.value) {
-            $Value
-        }
-        while ($null -ne $results."@odata.nextlink") {
-            $account_params = @{
-                Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-                Uri         = $results."@odata.nextlink"
-                Method      = 'GET'
-                ContentType = 'application/json'
-            }
-            $Results = Invoke-RestMethod @Account_params
-            foreach ($Value in $Results.value) {
                 $Value
             }
-        })
-    $all_results
+            while ($null -ne $results."@odata.nextlink") {
+                $account_params = @{
+                    Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
+                    Uri         = $results."@odata.nextlink"
+                    Method      = 'GET'
+                    ContentType = 'application/json'
+                }
+                $Results = Invoke-RestMethod @Account_params
+                foreach ($Value in $Results.value) {
+                    $Value
+                }
+            })
+        $all_results
     }
     if ($NoPersonalSites) {
         $account_params = @{
@@ -422,21 +425,21 @@ function Get-GraphSite {
         }
         $Results = Invoke-RestMethod @Account_params
         $all_results = @(foreach ($Value in $Results.value) {
-            $Value
-        }
-        while ($null -ne $results."@odata.nextlink") {
-            $account_params = @{
-                Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-                Uri         = $results."@odata.nextlink"
-                Method      = 'GET'
-                ContentType = 'application/json'
-            }
-            $Results = Invoke-RestMethod @Account_params
-            foreach ($Value in $Results.value) {
                 $Value
             }
-        })
-    $all_results | Where-Object WebUrl -notlike "*/personal/*"
+            while ($null -ne $results."@odata.nextlink") {
+                $account_params = @{
+                    Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
+                    Uri         = $results."@odata.nextlink"
+                    Method      = 'GET'
+                    ContentType = 'application/json'
+                }
+                $Results = Invoke-RestMethod @Account_params
+                foreach ($Value in $Results.value) {
+                    $Value
+                }
+            })
+        $all_results | Where-Object WebUrl -notlike "*/personal/*"
     }
 }
 function Get-GraphSitePermissions {
@@ -507,12 +510,12 @@ function New-GraphList {
         [Parameter(Mandatory)][Array]$Columns
     )
     $NewListColumns = @(foreach ($Column in $Columns) {
-        $item = [PSCustomObject]@{
-            name = $Column
-            text = [PSCustomObject]@{}
-        }
-        $item
-    })
+            $item = [PSCustomObject]@{
+                name = $Column
+                text = [PSCustomObject]@{}
+            }
+            $item
+        })
     $NewListBody = [PSCustomObject]@{
         displayName = $Name
         columns     = $NewListColumns

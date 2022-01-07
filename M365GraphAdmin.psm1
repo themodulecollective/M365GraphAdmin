@@ -121,10 +121,6 @@ function Get-GraphUser {
         [Parameter(Mandatory = $False)]$SearchDisplayName,
         [Switch]$All
     )
-    if ($All) {
-        $URI = "https://graph.microsoft.com/beta/users"
-        Get-NextPage -Uri $URI
-    }   
     if ($UserPrincipalName) {
         $account_params = @{
             Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
@@ -138,6 +134,10 @@ function Get-GraphUser {
         $URI = "https://graph.microsoft.com/beta/users?`$search=`"displayName:$SearchDisplayName`""
         Get-NextPage -uri $URI -SearchDisplayName
     }
+    if ($All) {
+        $URI = "https://graph.microsoft.com/beta/users"
+        Get-NextPage -Uri $URI
+    }   
 }
 function Set-GraphUser {
     [CmdletBinding()]
@@ -237,14 +237,14 @@ function Get-GraphGroup {
         }
         Invoke-RestMethod @Account_params
     }
-    if ($All) {
-        $URI = "https://graph.microsoft.com/beta/groups"
-        Get-NextPage -Uri $URI
-    }   
     if ($SearchDisplayName) {
         $URI = "https://graph.microsoft.com/beta/groups?`$search=`"displayName:$SearchDisplayName`""
         Get-NextPage -uri $URI -SearchDisplayName
     }
+    if ($All) {
+        $URI = "https://graph.microsoft.com/beta/groups"
+        Get-NextPage -Uri $URI
+    }   
 }
 function Get-GraphGroupMember {
     [CmdletBinding()]

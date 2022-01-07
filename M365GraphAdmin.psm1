@@ -11,6 +11,7 @@
 # Notes: ToDo items are placed hierarchically. Examples: ToDos for the entire module, place at top. ToDo for a Section, place at top of section. ToDo for a specific function, place within function at top.
 
 ## ToDo: Discuss Current Use of Graph Beta vs v1.0
+## ToDo: Replace all OData.NextLink loops with recursive functions - see get-graphuser
 
 # ACCESS TOKENS
 ## ToDo: Function to trigger Auth flow to existing module with application permissions for functions in this module

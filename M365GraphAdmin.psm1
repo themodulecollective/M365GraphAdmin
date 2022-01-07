@@ -136,7 +136,7 @@ function Get-GraphUser {
     }
     if ($SearchDisplayName) {
         $URI = "https://graph.microsoft.com/beta/users?`$search=`"displayName:$SearchDisplayName`""
-        Get-NextPage -uri $uri -SearchDisplayName
+        Get-NextPage -uri $URI -SearchDisplayName
     }
 }
 function Set-GraphUser {
@@ -222,44 +222,29 @@ function Get-GraphSkus {
 # Groups
 ## ToDo: Add Set-GraphGroup?
 function Get-GraphGroup {
-    ## ToDo: Clean up
-    ## ToDo: add -all for consisency
-    ## ToDo: add objectid
-    ## ToDo: SearchString is searching DisplayName only. Sufficient verbiage and functionality?
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $false)]$SearchString
+        [Parameter(Mandatory = $false)]$ObjectID,
+        [Parameter(Mandatory = $false)]$SearchDisplayName,
+        [Switch]$All
     )
-    $URI = "https://graph.microsoft.com/beta/groups"
-    $account_params = @{
-        Headers     = @{
-            Authorization = "Bearer $($GraphAPIKey)"
+    if ($ObjectID) {
+        $account_params = @{
+            Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
+            URI         = "https://graph.microsoft.com/beta/groups/$ObjectID"
+            Method      = 'GET'
+            ContentType = 'application/json'
         }
-        Uri         = $URI
-        Method      = 'GET'
-        ContentType = 'application/json'
+        Invoke-RestMethod @Account_params
     }
-    if ($SearchString) {
-        $account_params.URI = "$URI`?`$search=`"displayName:$SearchString`""
-        $account_params.headers.add("ConsistencyLevel", "eventual")
+    if ($All) {
+        $URI = "https://graph.microsoft.com/beta/groups"
+        Get-NextPage -Uri $URI
+    }   
+    if ($SearchDisplayName) {
+        $URI = "https://graph.microsoft.com/beta/groups?`$search=`"displayName:$SearchDisplayName`""
+        Get-NextPage -uri $URI -SearchDisplayName
     }
-    $Results = Invoke-RestMethod @Account_params
-    $all_results = @(foreach ($Value in $Results.value) {
-            $Value
-        }
-        while ($null -ne $results."@odata.nextlink") {
-            $account_params = @{
-                Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-                Uri         = $results."@odata.nextlink"
-                Method      = 'GET'
-                ContentType = 'application/json'
-            }
-            $Results = Invoke-RestMethod @Account_params
-            foreach ($Value in $Results.value) {
-                $Value
-            }
-        })
-    $all_results
 }
 function Get-GraphGroupMember {
     [CmdletBinding()]

@@ -251,29 +251,8 @@ function Get-GraphGroupMember {
     param (
         [Parameter(Mandatory)]$ObjectId
     )
-    $account_params = @{
-        Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-        Uri         = "https://graph.microsoft.com/beta/groups/$ObjectId/members"
-        Method      = 'GET'
-        ContentType = 'application/json'
-    }
-    $Results = Invoke-RestMethod @Account_params
-    $all_results = @(foreach ($Value in $Results.value) {
-            $Value
-        }
-        while ($null -ne $results."@odata.nextlink") {
-            $account_params = @{
-                Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-                Uri         = $results."@odata.nextlink"
-                Method      = 'GET'
-                ContentType = 'application/json'
-            }
-            $Results = Invoke-RestMethod @Account_params
-            foreach ($Value in $Results.value) {
-                $Value
-            }
-        })
-    $all_results
+    $URI = "https://graph.microsoft.com/beta/groups/$ObjectId/members"
+    Get-NextPage -uri $URI
 }
 function Add-GraphGroupMember {
     ## ToDo: Replace GroupID with ObjectId for consistency
@@ -364,8 +343,7 @@ function Get-GraphSite {
         [Parameter(Mandatory = $False,
             ParameterSetName = 'SID')]$SiteId,
         [Switch]$All,
-        [Parameter(Mandatory = $False,
-            ParameterSetName = 'NoOneDrive')]$NoPersonalSites
+        [Switch]$AllNoPersonalSites
     )
     if ($PSBoundParameters.SiteId) {
         $account_params = @{
@@ -376,54 +354,13 @@ function Get-GraphSite {
         }
         Invoke-RestMethod @Account_params
     }
-    if ($All -and !$SiteId) {
-        $account_params = @{
-            Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-            Uri         = "https://graph.microsoft.com/beta/sites/?$search="
-            Method      = 'GET'
-            ContentType = 'application/json'
-        }
-        $Results = Invoke-RestMethod @Account_params
-        $all_results = @(foreach ($Value in $Results.value) {
-                $Value
-            }
-            while ($null -ne $results."@odata.nextlink") {
-                $account_params = @{
-                    Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-                    Uri         = $results."@odata.nextlink"
-                    Method      = 'GET'
-                    ContentType = 'application/json'
-                }
-                $Results = Invoke-RestMethod @Account_params
-                foreach ($Value in $Results.value) {
-                    $Value
-                }
-            })
-        $all_results
+    if ($All -and !$SiteId -and !$AllNoPersonalSites) {
+        $URI = "https://graph.microsoft.com/beta/sites/?$search=*"
+        Get-NextPage -uri $URI
     }
-    if ($NoPersonalSites) {
-        $account_params = @{
-            Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-            Uri         = "https://graph.microsoft.com/beta/sites/?$search="
-            Method      = 'GET'
-            ContentType = 'application/json'
-        }
-        $Results = Invoke-RestMethod @Account_params
-        $all_results = @(foreach ($Value in $Results.value) {
-                $Value
-            }
-            while ($null -ne $results."@odata.nextlink") {
-                $account_params = @{
-                    Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-                    Uri         = $results."@odata.nextlink"
-                    Method      = 'GET'
-                    ContentType = 'application/json'
-                }
-                $Results = Invoke-RestMethod @Account_params
-                foreach ($Value in $Results.value) {
-                    $Value
-                }
-            })
+    if ($AllNoPersonalSites -and !$all) {
+        $URI = "https://graph.microsoft.com/beta/sites/?$search=*"
+        $all_results = Get-NextPage -uri $URI
         $all_results | Where-Object WebUrl -notlike "*/personal/*"
     }
 }
@@ -447,16 +384,11 @@ function Get-GraphList {
     param (
         [Parameter(Mandatory)]$SiteId
     )
-    $account_params = @{
-        Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-        Uri         = "https://graph.microsoft.com/beta/sites/$SiteId/lists"
-        Method      = 'GET'
-        ContentType = 'application/json'
-    }
-    $Results = Invoke-RestMethod @Account_params
-    $Results.value
+    $URI = "https://graph.microsoft.com/beta/sites/$SiteId/lists"
+    Get-NextPage -uri $URI
 }
 function Get-GraphListItem {
+## ToDo: Wrap in psobject to include weburl,createdby etc with fields
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$SiteId,
@@ -464,24 +396,14 @@ function Get-GraphListItem {
         [Parameter(Mandatory = $false)]$ItemId
     )
     if ($ItemId) {
-        $account_params = @{
-            Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-            Uri         = "https://graph.microsoft.com/beta/sites/$SiteId/lists/$ListId/items/$ItemId"
-            Method      = 'GET'
-            ContentType = 'application/json'
-        }
-        $response = Invoke-RestMethod @Account_params
+        $URI = "https://graph.microsoft.com/beta/sites/$SiteId/lists/$ListId/items?expand=fields"
+        $response = Get-NextPage -uri $URI | where id -eq $ItemId
         $response.fields
     }
     else {
-        $account_params = @{
-            Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-            Uri         = "https://graph.microsoft.com/beta/sites/$SiteId/lists/$ListId/items?expand=fields"
-            Method      = 'GET'
-            ContentType = 'application/json'
-        }
-        $response = Invoke-RestMethod @Account_params
-        $response.value.fields
+        $URI = "https://graph.microsoft.com/beta/sites/$SiteId/lists/$ListId/items?expand=fields"
+        $response = Get-NextPage -uri $URI
+        $response.fields
     }
 }
 
@@ -523,14 +445,8 @@ function Get-GraphListColumns {
         [Parameter(Mandatory)]$SiteId,
         [Parameter(Mandatory)]$ListId
     )
-    $account_params = @{
-        Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-        Uri         = "https://graph.microsoft.com/beta/sites/$SiteId/lists/$ListId/Columns"
-        Method      = 'GET'
-        ContentType = 'application/json'
-    }
-    $Results = Invoke-RestMethod @Account_params
-    $Results.value
+    $URI = "https://graph.microsoft.com/beta/sites/$SiteId/lists/$ListId/Columns"
+    Get-NextPage -uri $URI
 }
 function New-GraphListColumn {
     [CmdletBinding()]

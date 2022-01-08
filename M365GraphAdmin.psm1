@@ -7,12 +7,15 @@
 # Groups
 # Mail
 # SharePoint Online
-# Here Be Dragons - SPO
+# Here Be the Dragons of SPO
 
 # Notes: ToDo items are placed hierarchically. Examples: ToDos for the entire module, place at top. ToDo for a Section, place at top of section. ToDo for a specific function, place within function at top.
 
-## ToDo: Discuss Current Use of Graph Beta vs v1.0
-## ToDo: Replace all OData.NextLink loops with recursive functions - see get-graphuser
+## ToDo: Parameter Sets
+
+# DEFAULT GRAPH VERSION
+
+$Script:GraphVersion = "v1.0"
 
 # HELPER FUNCTIONS
 
@@ -43,6 +46,23 @@ function Get-NextPage {
 # ACCESS TOKENS
 ## ToDo: Function to trigger Auth flow to existing module with application permissions for functions in this module
 ## ToDo: Combine all into single function Get-GraphAccessToken?
+
+function Set-GraphVersion {
+    [CmdletBinding(DefaultParameterSetName = 'v1')]
+    param (
+        [Parameter(Mandatory = $false,
+        ParameterSetName = 'Path',
+        HelpMessage = 'Enter one or more filenames',
+        Position = 0)][switch]$Beta,
+        [switch]$v1
+    )
+    if ($v1) {
+        $Script:GraphVersion = "v1.0"
+    } 
+    if ($Beta) {
+        $Script:GraphVersion = "beta"
+    }   
+}
 function Get-GraphAzureKey {
 
     $ClientID = '1950a258-227b-4e31-a9cf-717495945fc2'
@@ -124,18 +144,18 @@ function Get-GraphUser {
     if ($UserPrincipalName) {
         $account_params = @{
             Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-            URI         = "https://graph.microsoft.com/beta/users/$userprincipalname"
+            URI         = "https://graph.microsoft.com/$GraphVersion/users/$userprincipalname"
             Method      = 'GET'
             ContentType = 'application/json'
         }
         Invoke-RestMethod @Account_params
     }
     if ($SearchDisplayName) {
-        $URI = "https://graph.microsoft.com/beta/users?`$search=`"displayName:$SearchDisplayName`""
+        $URI = "https://graph.microsoft.com/$GraphVersion/users?`$search=`"displayName:$SearchDisplayName`""
         Get-NextPage -uri $URI -SearchDisplayName
     }
     if ($All) {
-        $URI = "https://graph.microsoft.com/beta/users"
+        $URI = "https://graph.microsoft.com/$GraphVersion/users"
         Get-NextPage -Uri $URI
     }   
 }
@@ -170,7 +190,7 @@ function Set-GraphUser {
     $body | Add-Member $bodyparams
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-        Uri         = "https://graph.microsoft.com/beta/users/$($User.Id)"
+        Uri         = "https://graph.microsoft.com/$GraphVersion/users/$($User.Id)"
         body        = $body | ConvertTo-Json -Depth 5
         Method      = 'PATCH'
         ContentType = 'application/json'
@@ -186,7 +206,7 @@ function Get-GraphUserLastSignIn {
     $User = get-graphuser -UserPrincipalName $UserPrincipalName
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-        Uri         = "https://graph.microsoft.com/beta/users/$($User.Id)?`$select=signInActivity"
+        Uri         = "https://graph.microsoft.com/$GraphVersion/users/$($User.Id)?`$select=signInActivity"
         Method      = 'GET'
         ContentType = 'application/json'
     }
@@ -202,7 +222,7 @@ function Get-GraphUserSkus {
     $user = get-graphuser -UserPrincipalName $UserPrincipalName
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-        Uri         = "https://graph.microsoft.com/beta/Users/$($user.Id)/licenseDetails"
+        Uri         = "https://graph.microsoft.com/$GraphVersion/Users/$($user.Id)/licenseDetails"
         Method      = 'GET'
         ContentType = 'application/json'
     }
@@ -212,7 +232,7 @@ function Get-GraphUserSkus {
 function Get-GraphSkus {
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-        Uri         = "https://graph.microsoft.com/beta/subscribedSkus"
+        Uri         = "https://graph.microsoft.com/$GraphVersion/subscribedSkus"
         Method      = 'GET'
         ContentType = 'application/json'
     }
@@ -231,18 +251,18 @@ function Get-GraphGroup {
     if ($ObjectID) {
         $account_params = @{
             Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-            URI         = "https://graph.microsoft.com/beta/groups/$ObjectID"
+            URI         = "https://graph.microsoft.com/$GraphVersion/groups/$ObjectID"
             Method      = 'GET'
             ContentType = 'application/json'
         }
         Invoke-RestMethod @Account_params
     }
     if ($SearchDisplayName) {
-        $URI = "https://graph.microsoft.com/beta/groups?`$search=`"displayName:$SearchDisplayName`""
+        $URI = "https://graph.microsoft.com/$GraphVersion/groups?`$search=`"displayName:$SearchDisplayName`""
         Get-NextPage -uri $URI -SearchDisplayName
     }
     if ($All) {
-        $URI = "https://graph.microsoft.com/beta/groups"
+        $URI = "https://graph.microsoft.com/$GraphVersion/groups"
         Get-NextPage -Uri $URI
     }   
 }
@@ -251,7 +271,7 @@ function Get-GraphGroupMember {
     param (
         [Parameter(Mandatory)]$ObjectId
     )
-    $URI = "https://graph.microsoft.com/beta/groups/$ObjectId/members"
+    $URI = "https://graph.microsoft.com/$GraphVersion/groups/$ObjectId/members"
     Get-NextPage -uri $URI
 }
 function Add-GraphGroupMember {
@@ -264,9 +284,9 @@ function Add-GraphGroupMember {
         [Parameter(Mandatory)]$Member
     )
     $Member = get-graphuser -UserPrincipalName $Member
-    $URI = "https://graph.microsoft.com/beta/groups/$groupID/members/`$ref"
+    $URI = "https://graph.microsoft.com/$GraphVersion/groups/$groupID/members/`$ref"
     $Body = [PSCustomObject]@{
-        "@odata.id" = "https://graph.microsoft.com/beta/directoryObjects/$($Member.id)"
+        "@odata.id" = "https://graph.microsoft.com/$GraphVersion/directoryObjects/$($Member.id)"
     }
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
@@ -285,7 +305,7 @@ function Remove-GraphGroupMember {
         [Parameter(Mandatory)]$GroupID,
         [Parameter(Mandatory)]$Member
     )
-    $URI = "https://graph.microsoft.com/beta/groups/$groupID/members/$Member/`$ref"
+    $URI = "https://graph.microsoft.com/$GraphVersion/groups/$groupID/members/$Member/`$ref"
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
         Uri         = $URI
@@ -325,7 +345,7 @@ function Send-GraphMessage {
     }
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-        Uri         = "https://graph.microsoft.com/beta/users/$UserID/sendMail"
+        Uri         = "https://graph.microsoft.com/$GraphVersion/users/$UserID/sendMail"
         body        = $Body | ConvertTo-Json -Depth 10
         Method      = 'POST'
         ContentType = 'application/json'
@@ -348,18 +368,18 @@ function Get-GraphSite {
     if ($PSBoundParameters.SiteId) {
         $account_params = @{
             Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-            Uri         = "https://graph.microsoft.com/beta/sites/$SiteId"
+            Uri         = "https://graph.microsoft.com/$GraphVersion/sites/$SiteId"
             Method      = 'GET'
             ContentType = 'application/json'
         }
         Invoke-RestMethod @Account_params
     }
     if ($All -and !$SiteId -and !$AllNoPersonalSites) {
-        $URI = "https://graph.microsoft.com/beta/sites/?$search=*"
+        $URI = "https://graph.microsoft.com/$GraphVersion/sites/?$search=*"
         Get-NextPage -uri $URI
     }
     if ($AllNoPersonalSites -and !$all) {
-        $URI = "https://graph.microsoft.com/beta/sites/?$search=*"
+        $URI = "https://graph.microsoft.com/$GraphVersion/sites/?$search=*"
         $all_results = Get-NextPage -uri $URI
         $all_results | Where-Object WebUrl -notlike "*/personal/*"
     }
@@ -372,7 +392,7 @@ function Get-GraphSitePermissions {
     )
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-        Uri         = "https://graph.microsoft.com/beta/sites/$SiteId/permissions"
+        Uri         = "https://graph.microsoft.com/$GraphVersion/sites/$SiteId/permissions"
         Method      = 'GET'
         ContentType = 'application/json'
     }
@@ -384,7 +404,7 @@ function Get-GraphList {
     param (
         [Parameter(Mandatory)]$SiteId
     )
-    $URI = "https://graph.microsoft.com/beta/sites/$SiteId/lists"
+    $URI = "https://graph.microsoft.com/$GraphVersion/sites/$SiteId/lists"
     Get-NextPage -uri $URI
 }
 function Get-GraphListItem {
@@ -396,18 +416,18 @@ function Get-GraphListItem {
         [Parameter(Mandatory = $false)]$ItemId
     )
     if ($ItemId) {
-        $URI = "https://graph.microsoft.com/beta/sites/$SiteId/lists/$ListId/items?expand=fields"
+        $URI = "https://graph.microsoft.com/$GraphVersion/sites/$SiteId/lists/$ListId/items?expand=fields"
         $response = Get-NextPage -uri $URI | where id -eq $ItemId
         $response.fields
     }
     else {
-        $URI = "https://graph.microsoft.com/beta/sites/$SiteId/lists/$ListId/items?expand=fields"
+        $URI = "https://graph.microsoft.com/$GraphVersion/sites/$SiteId/lists/$ListId/items?expand=fields"
         $response = Get-NextPage -uri $URI
         $response.fields
     }
 }
 
-# HERE BE DRAGONS - SPO
+# HERE BE THE DRAGONS OF SPO
 #Notes: These were written to solve the problem of exporting data in a headless Azure Automation script. Exportto-CSV isn't an option because you can't access the disk of the server after the session is closed. So i wanted "Exportto-SPOList". They work, but were created with the specific scripts i was writing in mind. As a result, they are not fully functional and need a hard review of what they actually do and how, BUT its really useful in certain situations. :)
 function New-GraphList {
     [CmdletBinding()]
@@ -432,7 +452,7 @@ function New-GraphList {
     }
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-        Uri         = "https://graph.microsoft.com/beta/sites/$SiteId/lists"
+        Uri         = "https://graph.microsoft.com/$GraphVersion/sites/$SiteId/lists"
         Body        = $NewListBody | ConvertTo-Json -Depth 3
         Method      = 'POST'
         ContentType = 'application/json'
@@ -445,7 +465,7 @@ function Get-GraphListColumns {
         [Parameter(Mandatory)]$SiteId,
         [Parameter(Mandatory)]$ListId
     )
-    $URI = "https://graph.microsoft.com/beta/sites/$SiteId/lists/$ListId/Columns"
+    $URI = "https://graph.microsoft.com/$GraphVersion/sites/$SiteId/lists/$ListId/Columns"
     Get-NextPage -uri $URI
 }
 function New-GraphListColumn {
@@ -489,7 +509,7 @@ function New-GraphListColumn {
 
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-        Uri         = "https://graph.microsoft.com/beta/sites/$SiteId/lists/$ListId/Columns"
+        Uri         = "https://graph.microsoft.com/$GraphVersion/sites/$SiteId/lists/$ListId/Columns"
         Body        = $Body | ConvertTo-Json -Depth 4
         Method      = 'POST'
         ContentType = 'application/json'
@@ -508,7 +528,7 @@ function New-GraphListItem {
     }
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-        Uri         = "https://graph.microsoft.com/beta/sites/$SiteId/lists/$ListId/items"
+        Uri         = "https://graph.microsoft.com/$GraphVersion/sites/$SiteId/lists/$ListId/items"
         Body        = $ListItemBody | ConvertTo-Json -Depth 3
         Method      = 'POST'
         ContentType = 'application/json'
@@ -525,7 +545,7 @@ function Update-GraphListItem {
     )
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-        Uri         = "https://graph.microsoft.com/beta/sites/$SiteId/lists/$ListId/items/$ListItemId/fields"
+        Uri         = "https://graph.microsoft.com/$GraphVersion/sites/$SiteId/lists/$ListId/items/$ListItemId/fields"
         Body        = $ItemUpdates | ConvertTo-Json -Depth 5
         Method      = 'PATCH'
         ContentType = 'application/json'
@@ -542,7 +562,7 @@ function Remove-GraphListItem {
     )
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-        Uri         = "https://graph.microsoft.com/beta/sites/$SiteId/lists/$ListId/items/$ListItem"
+        Uri         = "https://graph.microsoft.com/$GraphVersion/sites/$SiteId/lists/$ListId/items/$ListItem"
         Method      = 'DELETE'
         ContentType = 'application/json'
     }

@@ -51,10 +51,9 @@ function Set-GraphVersion {
     [CmdletBinding(DefaultParameterSetName = 'v1')]
     param (
         [Parameter(Mandatory = $false,
-        ParameterSetName = 'Path',
-        HelpMessage = 'Enter one or more filenames',
-        Position = 0)][switch]$Beta,
-        [switch]$v1
+            ParameterSetName = 'Beta')][switch]$Beta,
+        [Parameter(Mandatory = $false,
+            ParameterSetName = 'v1')][switch]$v1
     )
     if ($v1) {
         $Script:GraphVersion = "v1.0"
@@ -135,11 +134,14 @@ function Consent-HGMsolService {
 # AZUREAD ADMINISTRATION
 # Users
 function Get-GraphUser {
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'UPN')]
     param (
-        [Parameter(Mandatory = $False)]$UserPrincipalName,
-        [Parameter(Mandatory = $False)]$SearchDisplayName,
-        [Switch]$All
+        [Parameter(Mandatory = $False,
+            ParameterSetName = 'UPN')]$UserPrincipalName,
+        [Parameter(Mandatory = $False,
+            ParameterSetName = 'Search')]$SearchDisplayName,
+        [Parameter(Mandatory = $False,
+            ParameterSetName = 'All')][Switch]$All
     )
     if ($UserPrincipalName) {
         $account_params = @{
@@ -242,11 +244,14 @@ function Get-GraphSkus {
 # Groups
 ## ToDo: Add Set-GraphGroup?
 function Get-GraphGroup {
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'OID')]
     param (
-        [Parameter(Mandatory = $false)]$ObjectID,
-        [Parameter(Mandatory = $false)]$SearchDisplayName,
-        [Switch]$All
+        [Parameter(Mandatory = $false,
+            ParameterSetName = 'OID')]$ObjectID,
+        [Parameter(Mandatory = $false,
+            ParameterSetName = 'Search')]$SearchDisplayName,
+        [Parameter(Mandatory = $false,
+            ParameterSetName = 'All')][Switch]$All
     )
     if ($ObjectID) {
         $account_params = @{
@@ -362,8 +367,10 @@ function Get-GraphSite {
     Param(
         [Parameter(Mandatory = $False,
             ParameterSetName = 'SID')]$SiteId,
-        [Switch]$All,
-        [Switch]$AllNoPersonalSites
+        [Parameter(Mandatory = $false,
+            ParameterSetName = 'All')][Switch]$All,
+        [Parameter(Mandatory = $false,
+            ParameterSetName = 'NoOD')][Switch]$AllNoPersonalSites
     )
     if ($PSBoundParameters.SiteId) {
         $account_params = @{
@@ -408,7 +415,7 @@ function Get-GraphList {
     Get-NextPage -uri $URI
 }
 function Get-GraphListItem {
-## ToDo: Wrap in psobject to include weburl,createdby etc with fields
+    ## ToDo: Wrap in psobject to include weburl,createdby etc with fields
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$SiteId,

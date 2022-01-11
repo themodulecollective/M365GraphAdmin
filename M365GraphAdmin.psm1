@@ -240,7 +240,7 @@ function Get-GraphSkus {
     $Results.value | select consumedUnits, skuId, skuPartNumber, prepaidunits
 }
 # Groups
-## ToDo: Add Set-GraphGroup?
+## ToDo: Add Set-GraphGroup
 function Get-GraphGroup {
     [CmdletBinding(DefaultParameterSetName = 'OID')]
     param (

@@ -11,8 +11,6 @@
 
 # Notes: ToDo items are placed hierarchically. Examples: ToDos for the entire module, place at top. ToDo for a Section, place at top of section. ToDo for a specific function, place within function at top.
 
-## ToDo: Parameter Sets
-
 # DEFAULT GRAPH VERSION
 
 $Script:GraphVersion = "v1.0"
@@ -280,18 +278,23 @@ function Get-GraphGroupMember {
     Get-NextPage -uri $URI
 }
 function Add-GraphGroupMember {
-    ## ToDo: Replace GroupID with ObjectId for consistency
-    ## ToDo: Replace Member with UserPrincipalName
-    ## ToDo: Add UserObjectID param
-    [CmdletBinding()]
+    ## ToDo: Test UserObjectID param
+    [CmdletBinding(DefaultParameterSetName = 'UOID')]
     param (
-        [Parameter(Mandatory)]$GroupID,
-        [Parameter(Mandatory)]$Member
+        [Parameter(Mandatory,
+        ParameterSetName = 'UOID')]
+        [Parameter(ParameterSetName = 'UPN')]$GroupObjectID,
+        [Parameter(Mandatory = $false,
+        ParameterSetName = 'UPN')]$UserPrincipalName,
+        [Parameter(Mandatory = $false,
+        ParameterSetName = 'UOID')]$UserObjectID
     )
-    $Member = get-graphuser -UserPrincipalName $Member
-    $URI = "https://graph.microsoft.com/$GraphVersion/groups/$groupID/members/`$ref"
+    if ($UserPrincipalName) {
+        $UserObjectID = get-graphuser -UserPrincipalName $UserPrincipalName
+    }
+    $URI = "https://graph.microsoft.com/$GraphVersion/groups/$GroupObjectID/members/`$ref"
     $Body = [PSCustomObject]@{
-        "@odata.id" = "https://graph.microsoft.com/$GraphVersion/directoryObjects/$($Member.id)"
+        "@odata.id" = "https://graph.microsoft.com/$GraphVersion/directoryObjects/$($UserObjectID)"
     }
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }

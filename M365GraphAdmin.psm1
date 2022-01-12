@@ -11,6 +11,8 @@
 
 # Notes: ToDo items are placed hierarchically. Examples: ToDos for the entire module, place at top. ToDo for a Section, place at top of section. ToDo for a specific function, place within function at top.
 
+# Discuss Module dependency for MSAL.PS. Get-MSALTOKEN
+
 # DEFAULT GRAPH VERSION
 
 $Script:GraphVersion = "v1.0"
@@ -127,7 +129,7 @@ function Connect-HGMsolService {
 function Consent-HGMsolService {
     ## todo: add administrator consent flow
     ## todo: add token refresh
-    start "https://login.microsoftonline.com/126ccd5c-dfff-496c-a52c-bf3844d430ec/adminconsent?client_id=f6557fc2-d4a5-4266-8f4c-2bdcd0cd9a2d&state=12345&redirect_uri=https://localhost/myapp/permissions"
+    start "https://login.microsoftonline.com/common/adminconsent?client_id=f6557fc2-d4a5-4266-8f4c-2bdcd0cd9a2d"
 }
 # AZUREAD ADMINISTRATION
 # Users

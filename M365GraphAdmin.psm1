@@ -159,6 +159,13 @@ function Get-GraphUser {
         Get-NextPage -Uri $URI
     }   
 }
+function Get-GraphUserEvents {
+    param (
+        [Parameter(Mandatory = $True)]$UserPrincipalName
+    )
+    $URI = "https://graph.microsoft.com/$GraphVersion/users/$userprincipalname/events"
+    Get-NextPage -URI $URI
+}
 function Set-GraphUser {
     [CmdletBinding()]
     Param(

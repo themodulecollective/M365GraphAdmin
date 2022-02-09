@@ -19,7 +19,7 @@ $Script:GraphVersion = "v1.0"
 
 # HELPER FUNCTIONS
 
-function Get-NextPage {
+function Get-OGNextPage {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $True)][string]$URI,
@@ -47,7 +47,7 @@ function Get-NextPage {
 ## ToDo: Function to trigger Auth flow to existing module with application permissions for functions in this module
 ## ToDo: Combine all into single function Get-GraphAccessToken?
 
-function Set-GraphVersion {
+function Set-OGVersion {
     [CmdletBinding(DefaultParameterSetName = 'v1')]
     param (
         [Parameter(Mandatory = $false,
@@ -62,7 +62,7 @@ function Set-GraphVersion {
         $Script:GraphVersion = "beta"
     }   
 }
-function Get-GraphAzureKey {
+function Get-OGAzureKey {
 
     $ClientID = '1950a258-227b-4e31-a9cf-717495945fc2'
     $TenantID = 'common'
@@ -93,7 +93,7 @@ function Get-GraphAzureKey {
     $TokenRequest = Invoke-RestMethod @TokenRequestParams
     $Script:GraphAPIKey = $TokenRequest.access_token
 }
-function Get-GraphAPIKey {
+function Get-OGAPIKey {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$ApplicationID,
@@ -109,7 +109,7 @@ function Get-GraphAPIKey {
     $ConnectGraph = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token" -Method POST -Body $Body
     $Script:GraphAPIKey = $ConnectGraph.access_token
 }
-function Connect-HGMsolService {
+function Connect-OGMsolService {
     ## todo: add token refresh
     [CmdletBinding()]
     param (
@@ -126,14 +126,14 @@ function Connect-HGMsolService {
     $ConnectGraph = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token" -Method POST -Body $Body
     $Script:GraphAPIKey = $ConnectGraph.access_token
 }
-function Consent-HGMsolService {
+function Consent-OGMsolService {
     ## todo: add administrator consent flow
     ## todo: add token refresh
     start "https://login.microsoftonline.com/common/adminconsent?client_id=f6557fc2-d4a5-4266-8f4c-2bdcd0cd9a2d"
 }
 # AZUREAD ADMINISTRATION
 # Users
-function Get-GraphUser {
+function Get-OGUser {
     [CmdletBinding(DefaultParameterSetName = 'UPN')]
     param (
         [Parameter(Mandatory = $False,
@@ -161,7 +161,7 @@ function Get-GraphUser {
         Get-NextPage -Uri $URI
     }   
 }
-function Get-GraphUserEvents {
+function Get-OGUserEvents {
     param (
         [Parameter(Mandatory = $True)]$UserPrincipalName,
         [Parameter(Mandatory = $False)]$Filter
@@ -176,7 +176,7 @@ function Get-GraphUserEvents {
         Get-NextPage -URI $URI
     }
 }
-function Set-GraphUser {
+function Set-OGUser {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory)]$UserPrincipalName,
@@ -214,7 +214,7 @@ function Set-GraphUser {
     }
     $quietrun = Invoke-RestMethod @Account_params
 }
-function Get-GraphUserLastSignIn {
+function Get-OGUserLastSignIn {
     ## ToDo: Review where the data is being pulled from. Signin date seems old
     [CmdletBinding()]
     param (
@@ -231,7 +231,7 @@ function Get-GraphUserLastSignIn {
     $response.signInActivity.lastsignindatetime
 }
 # Licenses
-function Get-GraphUserSkus {
+function Get-OGUserSkus {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$UserPrincipalName
@@ -246,7 +246,7 @@ function Get-GraphUserSkus {
     $Results = Invoke-RestMethod @Account_params
     $Results.value | select skuPartNumber, skuid
 }
-function Get-GraphSkus {
+function Get-OGSkus {
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
         Uri         = "https://graph.microsoft.com/$GraphVersion/subscribedSkus"
@@ -257,8 +257,8 @@ function Get-GraphSkus {
     $Results.value | select consumedUnits, skuId, skuPartNumber, prepaidunits
 }
 # Groups
-## ToDo: Add Set-GraphGroup
-function Get-GraphGroup {
+## ToDo: Add Set-OGGroup
+function Get-OGGroup {
     [CmdletBinding(DefaultParameterSetName = 'OID')]
     param (
         [Parameter(Mandatory = $false,
@@ -286,7 +286,7 @@ function Get-GraphGroup {
         Get-NextPage -Uri $URI
     }   
 }
-function Get-GraphGroupMember {
+function Get-OGGroupMember {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$ObjectId
@@ -294,7 +294,7 @@ function Get-GraphGroupMember {
     $URI = "https://graph.microsoft.com/$GraphVersion/groups/$ObjectId/members"
     Get-NextPage -uri $URI
 }
-function Add-GraphGroupMember {
+function Add-OGGroupMember {
     ## ToDo: Test UserObjectID param
     [CmdletBinding(DefaultParameterSetName = 'UOID')]
     param (
@@ -322,7 +322,7 @@ function Add-GraphGroupMember {
     }
     Invoke-RestMethod @Account_params
 }
-function Remove-GraphGroupMember {
+function Remove-OGGroupMember {
     ## ToDo: Replace GroupID with ObjectId for consistency
     ## ToDo: Replace Member with UserPrincipalName
     ## ToDo: Add UserObjectID param    [CmdletBinding()]
@@ -342,7 +342,7 @@ function Remove-GraphGroupMember {
 
 # MAIL
 ## ToDo: Discuss inclusion in module. Its cool, but dangerous. Allows user to send as any user in the tenant. Originally used it to replace Send-Mailmessage since its now considered insecure. The URI can be updated to for "me" instead of setting the SenderID, but if the App registration is using Application perms instead of delegated, I think that will fail.
-function Send-GraphMessage {
+function Send-OGMessage {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$Message,
@@ -380,7 +380,7 @@ function Send-GraphMessage {
 
 # SHAREPOINT ONLINE
 ## ToDo: Do we want to add in WebURL lookup in addtion to the current SiteID params?
-function Get-GraphSite {
+function Get-OGSite {
     ## ToDo: Check Graph for filter of personal sites in query instead of in PS
     ## ToDo: Fix usablilty language for params all and no personal sites. Setting -All and -NoPersonalSites currently runs All 2x. If no filtering in graph endpoint, then combine All and NoPersonalSites into same IF by adding IF.
     [CmdletBinding(DefaultParameterSetName = 'SID')]
@@ -411,7 +411,7 @@ function Get-GraphSite {
         $all_results | Where-Object WebUrl -notlike "*/personal/*"
     }
 }
-function Get-GraphSitePermissions {
+function Get-OGSitePermissions {
     ## ToDo: Review this function. I think its retrieving sharing permissions within the site, but I don't remember. Not even sure if it works.
     [CmdletBinding()]
     param (
@@ -426,7 +426,7 @@ function Get-GraphSitePermissions {
     $Results = Invoke-RestMethod @Account_params
     $Results.value
 }
-function Get-GraphList {
+function Get-OGList {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$SiteId
@@ -434,7 +434,7 @@ function Get-GraphList {
     $URI = "https://graph.microsoft.com/$GraphVersion/sites/$SiteId/lists"
     Get-NextPage -uri $URI
 }
-function Get-GraphListItem {
+function Get-OGListItem {
     ## ToDo: Wrap in psobject to include weburl,createdby etc with fields
     [CmdletBinding()]
     param (
@@ -456,7 +456,7 @@ function Get-GraphListItem {
 
 # HERE BE THE DRAGONS OF SPO
 #Notes: These were written to solve the problem of exporting data in a headless Azure Automation script. Exportto-CSV isn't an option because you can't access the disk of the server after the session is closed. So i wanted "Exportto-SPOList". They work, but were created with the specific scripts i was writing in mind. As a result, they are not fully functional and need a hard review of what they actually do and how, BUT its really useful in certain situations. :)
-function New-GraphList {
+function New-OGList {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$SiteId,
@@ -486,7 +486,7 @@ function New-GraphList {
     }
     Invoke-RestMethod @Account_params
 }
-function Get-GraphListColumns {
+function Get-OGListColumns {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$SiteId,
@@ -495,7 +495,7 @@ function Get-GraphListColumns {
     $URI = "https://graph.microsoft.com/$GraphVersion/sites/$SiteId/lists/$ListId/Columns"
     Get-NextPage -uri $URI
 }
-function New-GraphListColumn {
+function New-OGListColumn {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$SiteId,
@@ -543,7 +543,7 @@ function New-GraphListColumn {
     }
     Invoke-RestMethod @Account_params
 }
-function New-GraphListItem {
+function New-OGListItem {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$SiteId,
@@ -562,7 +562,7 @@ function New-GraphListItem {
     }
     Invoke-RestMethod @Account_params
 }
-function Update-GraphListItem {
+function Update-OGListItem {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$SiteId,
@@ -580,7 +580,7 @@ function Update-GraphListItem {
     Invoke-RestMethod @Account_params
     # $ItemUpdates | ConvertTo-Json -Depth 5
 }
-function Remove-GraphListItem {
+function Remove-OGListItem {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$SiteId,

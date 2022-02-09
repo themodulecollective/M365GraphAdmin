@@ -47,6 +47,24 @@ function Get-OGNextPage {
 ## ToDo: Function to trigger Auth flow to existing module with application permissions for functions in this module
 ## ToDo: Combine all into single function Get-GraphAccessToken?
 
+function Remove-OGTeamsEventInfo {
+    param (
+        [Parameter(Mandatory = $True)]$html
+    )
+    $stringbyline = $html -split "`r`n" 
+    $Underscores = $stringbyline | Select-String "_________________________________________ 
+    _______________________________________"
+    if ($Underscores) {
+        $Startline = $Underscores[0].LineNumber - 2
+        $Endline = $Underscores[1].LineNumber
+        $expectedContent = $stringbyline[$Startline..$Endline] | Select-String -simplematch "teams.microsoft.co 
+    m/meetingOptions/?organizerId="
+        if ($expectedContent) {
+            $TotalLines = $stringbyline.count - 1
+            $stringbyline[0..$Startline], $stringbyline[$Endline..$TotalLines]
+        }
+    }
+}
 function Set-OGVersion {
     [CmdletBinding(DefaultParameterSetName = 'v1')]
     param (
@@ -166,7 +184,7 @@ function Get-OGUserEvents {
         [Parameter(Mandatory = $True)]$UserPrincipalName,
         [Parameter(Mandatory = $False)]$Filter
     )
-    if ($filter){
+    if ($filter) {
         
         $URI = "https://graph.microsoft.com/$GraphVersion/users/$userprincipalname/events?`$filter=$filter"
         Get-NextPage -URI $URI
@@ -175,6 +193,54 @@ function Get-OGUserEvents {
         $URI = "https://graph.microsoft.com/$GraphVersion/users/$userprincipalname/events"
         Get-NextPage -URI $URI
     }
+}
+function Recreate-OGUserEvent {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory)]$Content
+    )
+    $Body = [PSCustomObject]@{}
+    if ($Content.subject) {
+        $body | Add-Member -MemberType NoteProperty -Name 'subject' -Value $Content.subject
+    }
+    if ($Content.body.content) {
+        $message = Remove-OGTeamsEventInfo -html $Content.body.content
+        $bodymessage = @(
+            [PSCustomObject]@{
+                contentType = "HTML"
+                content     = $message
+            }
+        )
+        $body | Add-Member -MemberType NoteProperty -Name 'body' -Value $bodymessage
+    }
+    if ($Content.start) {
+        $start = @(
+            [PSCustomObject]@{
+                dateTime = $Content.start.dateTime
+                timeZone = $Content.start.timeZone
+            }
+        )
+        $body | Add-Member -MemberType NoteProperty -Name 'start' -Value $start
+    }
+    if ($Content.end) {
+        $end = @(
+            [PSCustomObject]@{
+                dateTime = $Content.end.dateTime
+                timeZone = $Content.end.timeZone
+            }
+        )
+        $body | Add-Member -MemberType NoteProperty -Name 'end' -Value $end
+    }
+    
+
+    $account_params = @{
+        Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
+        Uri         = "https://graph.microsoft.com/$GraphVersion/users/$UserID/sendMail"
+        body        = $Body | ConvertTo-Json -Depth 10
+        Method      = 'POST'
+        ContentType = 'application/json'
+    }
+    Invoke-RestMethod @Account_params    
 }
 function Set-OGUser {
     [CmdletBinding()]
@@ -299,12 +365,12 @@ function Add-OGGroupMember {
     [CmdletBinding(DefaultParameterSetName = 'UOID')]
     param (
         [Parameter(Mandatory,
-        ParameterSetName = 'UOID')]
+            ParameterSetName = 'UOID')]
         [Parameter(ParameterSetName = 'UPN')]$GroupObjectID,
         [Parameter(Mandatory = $false,
-        ParameterSetName = 'UPN')]$UserPrincipalName,
+            ParameterSetName = 'UPN')]$UserPrincipalName,
         [Parameter(Mandatory = $false,
-        ParameterSetName = 'UOID')]$UserObjectID
+            ParameterSetName = 'UOID')]$UserObjectID
     )
     if ($UserPrincipalName) {
         $UserObjectID = get-graphuser -UserPrincipalName $UserPrincipalName

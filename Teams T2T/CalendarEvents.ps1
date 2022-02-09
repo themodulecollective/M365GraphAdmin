@@ -15,19 +15,15 @@ foreach ($UserNewTenant in $UsersNewTenant) {
     foreach ($IndividualEvent in $IndividualEvents) {
         # Filter for Online meeting
         if ($IndividualEvent.isOnlineMeeting -eq $true) {
-# TODO New Individual event            
+            # Remove Teams Meeting Info from Event Body
+            $UpdatedIndividualBody = Remove-OGTeamsEventInfo -html $IndividualEvent.body.content
         }
     }
     $SeriesEvents = Get-OGUserEvents -UserPrincipalName $UsersNewTenant -Filter $FilterSeriesEvents
     foreach ($SeriesEvent in $SeriesEvents) {
         # Filter for Online meeting
         if ($SeriesEvent.isOnlineMeeting -eq $true) {
-# TODO New Series event            
-        }
+            # Remove Teams Meeting Info from Event Body
+            $UpdatedSeriesBody = Remove-OGTeamsEventInfo -html $SeriesEvent.body.content}
     }
 }
-
-$HTML = New-Object -Com "HTMLFile"
-[string]$htmlBody = $events[0].body.content
-$HTML.write([ref]$htmlBody)
-$filter = $HTML.getElementsByClassName($htmlClassName)

@@ -36,7 +36,7 @@ function Get-OGNextPage {
     }
     $Result = Invoke-RestMethod @Account_params
     if ($results."@odata.nextlink") {
-        Get-NextPage -Uri $results."@odata.nextlink"
+        Get-OGNextPage -Uri $results."@odata.nextlink"
     }
     elseif (!$results."@odata.nextlink") {
         $Result.Value
@@ -155,11 +155,11 @@ function Get-OGUser {
     }
     if ($SearchDisplayName) {
         $URI = "https://graph.microsoft.com/$GraphVersion/users?`$search=`"displayName:$SearchDisplayName`""
-        Get-NextPage -uri $URI -SearchDisplayName
+        Get-OGNextPage -uri $URI -SearchDisplayName
     }
     if ($All) {
         $URI = "https://graph.microsoft.com/$GraphVersion/users"
-        Get-NextPage -Uri $URI
+        Get-OGNextPage -Uri $URI
     }   
 }
 function Get-OGUserEvents {
@@ -170,11 +170,11 @@ function Get-OGUserEvents {
     if ($filter) {
         
         $URI = "https://graph.microsoft.com/$GraphVersion/users/$userprincipalname/events?`$filter=$filter"
-        Get-NextPage -URI $URI
+        Get-OGNextPage -URI $URI
     }
     else {
         $URI = "https://graph.microsoft.com/$GraphVersion/users/$userprincipalname/events"
-        Get-NextPage -URI $URI
+        Get-OGNextPage -URI $URI
     }
 }
 function Remove-OGTeamsEventInfo {
@@ -279,7 +279,6 @@ function Convert-OGUserEvent {
         ContentType = 'application/json'
     }
     Invoke-RestMethod @Account_params
-    $body | convertto-json -Depth 10
 }
 function Convert-OGGroupEvent {
     [CmdletBinding()]
@@ -475,11 +474,11 @@ function Get-OGGroup {
     }
     if ($SearchDisplayName) {
         $URI = "https://graph.microsoft.com/$GraphVersion/groups?`$search=`"displayName:$SearchDisplayName`""
-        Get-NextPage -uri $URI -SearchDisplayName
+        Get-OGNextPage -uri $URI -SearchDisplayName
     }
     if ($All) {
         $URI = "https://graph.microsoft.com/$GraphVersion/groups"
-        Get-NextPage -Uri $URI
+        Get-OGNextPage -Uri $URI
     }   
 }
 function Get-OGGroupMember {
@@ -488,7 +487,7 @@ function Get-OGGroupMember {
         [Parameter(Mandatory)]$ObjectId
     )
     $URI = "https://graph.microsoft.com/$GraphVersion/groups/$ObjectId/members"
-    Get-NextPage -uri $URI
+    Get-OGNextPage -uri $URI
 }
 function Add-OGGroupMember {
     ## ToDo: Test UserObjectID param
@@ -599,11 +598,11 @@ function Get-OGSite {
     }
     if ($All -and !$SiteId -and !$AllNoPersonalSites) {
         $URI = "https://graph.microsoft.com/$GraphVersion/sites/?$search=*"
-        Get-NextPage -uri $URI
+        Get-OGNextPage -uri $URI
     }
     if ($AllNoPersonalSites -and !$all) {
         $URI = "https://graph.microsoft.com/$GraphVersion/sites/?$search=*"
-        $all_results = Get-NextPage -uri $URI
+        $all_results = Get-OGNextPage -uri $URI
         $all_results | Where-Object WebUrl -notlike "*/personal/*"
     }
 }
@@ -628,7 +627,7 @@ function Get-OGList {
         [Parameter(Mandatory)]$SiteId
     )
     $URI = "https://graph.microsoft.com/$GraphVersion/sites/$SiteId/lists"
-    Get-NextPage -uri $URI
+    Get-OGNextPage -uri $URI
 }
 function Get-OGListItem {
     ## ToDo: Wrap in psobject to include weburl,createdby etc with fields
@@ -640,12 +639,12 @@ function Get-OGListItem {
     )
     if ($ItemId) {
         $URI = "https://graph.microsoft.com/$GraphVersion/sites/$SiteId/lists/$ListId/items?expand=fields"
-        $response = Get-NextPage -uri $URI | where id -eq $ItemId
+        $response = Get-OGNextPage -uri $URI | where id -eq $ItemId
         $response.fields
     }
     else {
         $URI = "https://graph.microsoft.com/$GraphVersion/sites/$SiteId/lists/$ListId/items?expand=fields"
-        $response = Get-NextPage -uri $URI
+        $response = Get-OGNextPage -uri $URI
         $response.fields
     }
 }
@@ -689,7 +688,7 @@ function Get-OGListColumns {
         [Parameter(Mandatory)]$ListId
     )
     $URI = "https://graph.microsoft.com/$GraphVersion/sites/$SiteId/lists/$ListId/Columns"
-    Get-NextPage -uri $URI
+    Get-OGNextPage -uri $URI
 }
 function New-OGListColumn {
     [CmdletBinding()]

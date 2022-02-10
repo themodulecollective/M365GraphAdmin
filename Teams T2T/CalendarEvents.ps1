@@ -1,7 +1,7 @@
 ## New Tenant Application Variables
-$applicationID = "f6557fc2-d4a5-4266-8f4c-2bdcd0cd9a2d"
-$tenantId = "126ccd5c-dfff-496c-a52c-bf3844d430ec"
-$accessSecret = 'TQ-7Q~lXEafuQ3v0i6nP~-fRak2OmCRNHUDLk'
+$applicationID = #
+$tenantId = #
+$accessSecret = #
 # CutOver Date
 [datetime]$cutOver = # ENTER CUTOVER DATE HERE #
 [string]$cutOver = $cutOver.ToString("yyyy-MM-dd")

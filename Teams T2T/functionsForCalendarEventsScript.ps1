@@ -1,8 +1,4 @@
-# DEFAULT GRAPH VERSION
-
 $Script:GraphVersion = "v1.0"
-
-# HELPER FUNCTIONS
 
 function Get-OGNextPage {
     [CmdletBinding()]

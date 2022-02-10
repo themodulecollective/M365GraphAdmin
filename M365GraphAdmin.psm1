@@ -196,7 +196,8 @@ function Remove-OGTeamsEventInfo {
 function Convert-OGUserEvent {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory)][PSObject]$Event
+        [Parameter(Mandatory)][PSObject]$Event,
+        [Parameter(Mandatory = $false)][datetime]$CutOver
     )
     $Body = @{}
     if ($Event.subject) {
@@ -235,6 +236,10 @@ function Convert-OGUserEvent {
                 type      = $event.recurrence.range.type
                 startDate = $event.recurrence.range.startDate
             }
+        }
+        if ($CutOver) {
+            [string]$CutOver = $CutOver.ToString("yyyy-MM-dd")
+            $recurrence.range.startDate = $CutOver
         }
         if ($recurrence.range.type -ne "noEnd") {
             $recurrence.range = Add-Member -MemberType NoteProperty  -Name 'endDate' -Value $event.recurrence.range.endDate
@@ -274,11 +279,13 @@ function Convert-OGUserEvent {
         ContentType = 'application/json'
     }
     Invoke-RestMethod @Account_params
+    $body | convertto-json -Depth 10
 }
 function Convert-OGGroupEvent {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory)][PSObject]$Event
+        [Parameter(Mandatory)][PSObject]$Event,
+        [Parameter(Mandatory)][datetime]$CutOver
     )
     $Body = @{}
     if ($Event.subject) {
@@ -318,6 +325,10 @@ function Convert-OGGroupEvent {
                 startDate = $event.recurrence.range.startDate
             }
         }
+        if ($CutOver) {
+            [string]$CutOver = $CutOver.ToString("yyyy-MM-dd")
+            $recurrence.range.startDate = $CutOver
+        }
         if ($recurrence.range.type -ne "noEnd") {
             $recurrence.range = Add-Member -MemberType NoteProperty  -Name 'endDate' -Value $event.recurrence.range.endDate
         }
@@ -355,7 +366,8 @@ function Convert-OGGroupEvent {
         Method      = 'POST'
         ContentType = 'application/json'
     }
-    Invoke-RestMethod @Account_params
+    #Invoke-RestMethod @Account_params
+    $body | convertto-json -Depth 10
 }
 #$Body = new-object -name body -Property $Body -TypeName psobject
 

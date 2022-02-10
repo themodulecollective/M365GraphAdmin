@@ -147,7 +147,7 @@ function Convert-OGUserEvent {
             $recurrence.range.startDate = $CutOver
         }
         if ($recurrence.range.type -ne "noEnd") {
-            $recurrence.range = Add-Member -MemberType NoteProperty  -Name 'endDate' -Value $event.recurrence.range.endDate
+            $recurrence.range | Add-Member -MemberType NoteProperty  -Name 'endDate' -Value $event.recurrence.range.endDate
         }
         $body.recurrence = $recurrence
     }

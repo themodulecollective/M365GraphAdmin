@@ -27,3 +27,5 @@ foreach ($UserNewTenant in $UsersNewTenant) {
             $UpdatedSeriesBody = Remove-OGTeamsEventInfo -html $SeriesEvent.body.content}
     }
 }
+
+new-oguserevent -subject -message -

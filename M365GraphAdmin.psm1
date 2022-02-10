@@ -47,24 +47,7 @@ function Get-OGNextPage {
 ## ToDo: Function to trigger Auth flow to existing module with application permissions for functions in this module
 ## ToDo: Combine all into single function Get-GraphAccessToken?
 
-function Remove-OGTeamsEventInfo {
-    param (
-        [Parameter(Mandatory = $True)]$html
-    )
-    $stringbyline = $html -split "`r`n" 
-    $Underscores = $stringbyline | Select-String "_________________________________________ 
-    _______________________________________"
-    if ($Underscores) {
-        $Startline = $Underscores[0].LineNumber - 2
-        $Endline = $Underscores[1].LineNumber
-        $expectedContent = $stringbyline[$Startline..$Endline] | Select-String -simplematch "teams.microsoft.co 
-    m/meetingOptions/?organizerId="
-        if ($expectedContent) {
-            $TotalLines = $stringbyline.count - 1
-            $stringbyline[0..$Startline], $stringbyline[$Endline..$TotalLines]
-        }
-    }
-}
+
 function Set-OGVersion {
     [CmdletBinding(DefaultParameterSetName = 'v1')]
     param (
@@ -194,54 +177,108 @@ function Get-OGUserEvents {
         Get-NextPage -URI $URI
     }
 }
-function Recreate-OGUserEvent {
+function Remove-OGTeamsEventInfo {
+    param (
+        [Parameter(Mandatory = $True)]$html
+    )
+    $stringbyline = $html -split "`r`n" 
+    $Underscores = $stringbyline | Select-String "________________________________________________________________________________"
+    if ($Underscores) {
+        $Startline = $Underscores[0].LineNumber - 2
+        $Endline = $Underscores[1].LineNumber
+        $expectedContent = $stringbyline[$Startline..$Endline] | Select-String -simplematch "teams.microsoft.com"
+        if ($expectedContent) {
+            $TotalLines = $stringbyline.count - 1
+            $stringbyline[0..$Startline], $stringbyline[$Endline..$TotalLines] | Out-String
+        }
+    }
+}
+function Convert-OGUserEvent {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory)]$Content
+        [Parameter(Mandatory)][PSObject]$Event
     )
-    $Body = [PSCustomObject]@{}
-    if ($Content.subject) {
-        $body | Add-Member -MemberType NoteProperty -Name 'subject' -Value $Content.subject
+    $Body = @{}
+    if ($Event.subject) {
+        $body.subject = $Event.subject
     }
-    if ($Content.body.content) {
-        $message = Remove-OGTeamsEventInfo -html $Content.body.content
-        $bodymessage = @(
-            [PSCustomObject]@{
-                contentType = "HTML"
-                content     = $message
+    if ($Event.body.content) {
+        $updateContent = Remove-OGTeamsEventInfo -html $Event.body.content
+        $bodyContent = [PSCustomObject]@{
+            contentType = "HTML"
+            content     = $updateContent
+        }
+        $body.body = $bodycontent
+    }
+    if ($Event.start) {
+        $start = [PSCustomObject]@{
+            dateTime = $Event.start.dateTime
+            timeZone = $Event.start.timeZone
+        }
+        $body.start = $start
+    }
+    if ($Event.end) {
+        $end = [PSCustomObject]@{
+            dateTime = $Content.end.dateTime
+            timeZone = $Content.end.timeZone
+        }
+        $body.end = $end
+    }
+    if ($event.recurrence) {
+        $recurrence = [PSCustomObject]@{
+            pattern = [PSCustomObject]@{
+                type       = $event.recurrence.pattern.type
+                interval   = $event.recurrence.pattern.interval
+                daysOfWeek = @($event.recurrence.pattern.daysofweek)
             }
-        )
-        $body | Add-Member -MemberType NoteProperty -Name 'body' -Value $bodymessage
-    }
-    if ($Content.start) {
-        $start = @(
-            [PSCustomObject]@{
-                dateTime = $Content.start.dateTime
-                timeZone = $Content.start.timeZone
+            range   = [PSCustomObject]@{
+                type      = $event.recurrence.range.type
+                startDate = $event.recurrence.range.startDate
             }
-        )
-        $body | Add-Member -MemberType NoteProperty -Name 'start' -Value $start
+        }
+        if ($recurrence.range.type -ne "noEnd") {
+            $recurrence.range = Add-Member -MemberType NoteProperty  -Name 'endDate' -Value $event.recurrence.range.endDate
+        }
+        $body.recurrence = $recurrence
     }
-    if ($Content.end) {
-        $end = @(
-            [PSCustomObject]@{
-                dateTime = $Content.end.dateTime
-                timeZone = $Content.end.timeZone
-            }
-        )
-        $body | Add-Member -MemberType NoteProperty -Name 'end' -Value $end
+    if ($event.location.displayName) {
+        $location = [PSCustomObject]@{
+            displayName = $event.location.displayName
+        }
+        $body.location = $location
     }
-    
-
+    if ($event.attendees) {
+        $array = @(
+            foreach ($attendeeItem in $event.attendees) {
+                $attendees = @{}
+                $emailAddress = [PSCustomObject]@{
+                    address = $attendeeItem.emailAddress.address
+                    name    = $attendeeItem.emailAddress.name
+                }
+                $attendees.emailaddress = $emailAddress
+                $type = $attendeeItem.type
+                $attendees.type = $type
+                $attendees
+            })
+        $body.attendees = $array
+    }
+    if ($event.allowNewTimeProposals) {
+        $allowNewTimeProposals = $event.allowNewTimeProposals
+        $body.allowNewTimeProposals = $allowNewTimeProposals
+    }
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-        Uri         = "https://graph.microsoft.com/$GraphVersion/users/$UserID/sendMail"
+        Uri         = "https://graph.microsoft.com/$GraphVersion/users/$($Event.organizer.address)/events"
         body        = $Body | ConvertTo-Json -Depth 10
         Method      = 'POST'
         ContentType = 'application/json'
     }
-    Invoke-RestMethod @Account_params    
+    Invoke-RestMethod @Account_params
 }
+    
+#$Body = new-object -name body -Property $Body -TypeName psobject
+
+
 function Set-OGUser {
     [CmdletBinding()]
     Param(

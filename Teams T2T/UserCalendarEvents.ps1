@@ -8,6 +8,8 @@ $accessSecret = #
 # Filter for events on type,startdate, and isOrganizer
 $filterIndividualEvents = "type eq 'singleInstance' and start/dateTime ge '$($cutOver)' and isorganizer eq true"
 $filterSeriesEvents = "type eq 'seriesMaster' and isorganizer eq true"
+# Option Subject Append
+$SubjectAppend = ""
 # Get API Key
 Get-OGAPIKey -ApplicationID $applicationID -TenantId $tenantId -AccessSecret $accessSecret
 # Get New Tenant Users
@@ -21,7 +23,12 @@ foreach ($userNewTenant in $usersNewTenant) {
         # Filter for Online meeting
         if ($individualEvent.isOnlineMeeting -eq $true) {
             # Create New Event
-            Convert-OGUserEvent -Event $individualEvent -CutOver $cutOver
+            if ($SubjectAppend) {
+                Convert-OGUserEvent -Event $individualEvent -CutOver $cutOver -SubjectAppend $SubjectAppend
+            }
+            else {
+                Convert-OGUserEvent -Event $individualEvent -CutOver $cutOver
+            }
         }
     }
     $seriesEvents = Get-OGUserEvents -UserPrincipalName $userNewTenant.userPrincipalName  -Filter $filterSeriesEvents
@@ -30,7 +37,12 @@ foreach ($userNewTenant in $usersNewTenant) {
         if ($seriesEvent.isOnlineMeeting -eq $true) {
             if (($seriesEvent.recurrence.range.type -eq "noEnd") -or ($seriesEvent.recurrence.range.type -ge $CutOver)) {
                 # Create New Event
-                Convert-OGUserEvent -Event $seriesEvent -CutOver $cutOver
+                if ($SubjectAppend) {
+                    Convert-OGUserEvent -Event $individualEvent -CutOver $cutOver -SubjectAppend $SubjectAppend
+                }
+                else {
+                    Convert-OGUserEvent -Event $individualEvent -CutOver $cutOver
+                }
             }
         }
         [datetime]$time = Get-Date

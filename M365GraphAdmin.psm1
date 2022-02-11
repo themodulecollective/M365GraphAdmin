@@ -177,6 +177,21 @@ function Get-OGUserEvents {
         Get-OGNextPage -URI $URI
     }
 }
+function Get-OGGroupEvents {
+    param (
+        [Parameter(Mandatory = $True)]$GroupId,
+        [Parameter(Mandatory = $False)]$Filter
+    )
+    if ($filter) {
+        
+        $URI = "https://graph.microsoft.com/$GraphVersion/groups/$GroupId/events?`$filter=$filter"
+        Get-OGNextPage -URI $URI
+    }
+    else {
+        $URI = "https://graph.microsoft.com/$GraphVersion/groups/$GroupId/events"
+        Get-OGNextPage -URI $URI
+    }
+}
 function Remove-OGTeamsEventInfo {
     param (
         [Parameter(Mandatory = $True)]$html
@@ -197,11 +212,19 @@ function Convert-OGUserEvent {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)][PSObject]$Event,
-        [Parameter(Mandatory = $false)][datetime]$CutOver
+        [Parameter(Mandatory = $false)][datetime]$CutOver,
+        [Parameter(Mandatory)][string]$SubjectAppend
+
     )
     $Body = @{}
     if ($Event.subject) {
-        $body.subject = $Event.subject
+        if ($SubjectAppend) {
+            $Subject = $SubjectAppend + " - " + $Event.subject
+        }
+        else {
+            $Subject = $Event.subject
+        }
+        $body.subject = $Subject
     }
     if ($Event.body.content) {
         $updateContent = Remove-OGTeamsEventInfo -html $Event.body.content
@@ -287,7 +310,8 @@ function Convert-OGGroupEvent {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)][PSObject]$Event,
-        [Parameter(Mandatory)][datetime]$CutOver
+        [Parameter(Mandatory)][string]$GroupID,
+        [Parameter(Mandatory = $false)][datetime]$CutOver
     )
     $Body = @{}
     if ($Event.subject) {
@@ -332,7 +356,7 @@ function Convert-OGGroupEvent {
             $recurrence.range.startDate = $CutOver
         }
         if ($recurrence.range.type -ne "noEnd") {
-            $recurrence.range = Add-Member -MemberType NoteProperty  -Name 'endDate' -Value $event.recurrence.range.endDate
+            $recurrence.range | Add-Member -MemberType NoteProperty  -Name 'endDate' -Value $event.recurrence.range.endDate
         }
         $body.recurrence = $recurrence
     }
@@ -361,15 +385,17 @@ function Convert-OGGroupEvent {
         $allowNewTimeProposals = $event.allowNewTimeProposals
         $body.allowNewTimeProposals = $allowNewTimeProposals
     }
+    $body.isOnlineMeeting = "true"
+    $body.onlineMeetingProvider = "teamsForBusiness"
+
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-        Uri         = "https://graph.microsoft.com/$GraphVersion/groups/$($Event.organizer.emailaddress.address)/events"
+        Uri         = "https://graph.microsoft.com/$GraphVersion/groups/$GroupID/events"
         body        = $Body | ConvertTo-Json -Depth 10
         Method      = 'POST'
         ContentType = 'application/json'
     }
-    #Invoke-RestMethod @Account_params
-    $body | convertto-json -Depth 10
+    Invoke-RestMethod @Account_params
 }
 #$Body = new-object -name body -Property $Body -TypeName psobject
 

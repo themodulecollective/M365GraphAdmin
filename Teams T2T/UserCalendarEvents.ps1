@@ -1,4 +1,8 @@
-## New Tenant Application Variables
+### TODO: RECURRENCE, Logging, Attachments, Wiki?, location
+# Dependency Module
+Install-Module JWT
+Import-Module JWT
+# New Tenant Application Variables
 $applicationID = #
 $tenantId = #
 $accessSecret = #
@@ -9,7 +13,9 @@ $accessSecret = #
 $filterIndividualEvents = "type eq 'singleInstance' and start/dateTime ge '$($cutOver)' and isorganizer eq true"
 $filterSeriesEvents = "type eq 'seriesMaster' and isorganizer eq true"
 # Option Subject Append
-$SubjectAppend = ""
+$subjectAppend = ""
+# Log Path
+$logPath = "$env:USERPROFILE\Downloads\userCalendarEvents.log"
 # Get API Key
 Get-OGAPIKey -ApplicationID $applicationID -TenantId $tenantId -AccessSecret $accessSecret
 # Get New Tenant Users
@@ -23,25 +29,49 @@ foreach ($userNewTenant in $usersNewTenant) {
         # Filter for Online meeting
         if ($individualEvent.isOnlineMeeting -eq $true) {
             # Create New Event
-            if ($SubjectAppend) {
-                Convert-OGUserEvent -Event $individualEvent -CutOver $cutOver -SubjectAppend $SubjectAppend
+            if ($subjectAppend) {
+                try {
+                    $converted = Convert-OGUserEvent -Event $individualEvent -CutOver $cutOver -SubjectAppend $subjectAppend
+                    Write-ConvertEventLog -LogType "INFO" -User $userNewTenant.userPrincipalName -EventId $individualEvent.id -Message $converted -LogPath $logPath
+                }
+                catch {
+                    Write-ConvertEventLog -LogType "ERROR" -User $userNewTenant.userPrincipalName -EventId $individualEvent.id -Message $_ -LogPath $logPath
+                }
             }
             else {
-                Convert-OGUserEvent -Event $individualEvent -CutOver $cutOver
+                try {
+                    $converted = Convert-OGUserEvent -Event $individualEvent -CutOver $cutOver
+                    Write-ConvertEventLog -LogType "INFO" -User $userNewTenant.userPrincipalName -EventId $individualEvent.id -Message $converted -LogPath $logPath
+                }
+                catch {
+                    Write-ConvertEventLog -LogType "ERROR" -User $userNewTenant.userPrincipalName -EventId $individualEvent.id -Message $_ -LogPath $logPath
+                }
             }
         }
     }
-    $seriesEvents = Get-OGUserEvents -UserPrincipalName $userNewTenant.userPrincipalName  -Filter $filterSeriesEvents
+    $seriesEvents = Get-OGUserEvents -UserPrincipalName $userNewTenant.userPrincipalName -Filter $filterSeriesEvents
     foreach ($seriesEvent in $seriesEvents) {
         # Filter for Online meeting
         if ($seriesEvent.isOnlineMeeting -eq $true) {
-            if (($seriesEvent.recurrence.range.type -eq "noEnd") -or ($seriesEvent.recurrence.range.type -ge $CutOver)) {
+            if (($seriesEvent.recurrence.range.type -eq "noEnd") -or ($seriesEvent.recurrence.range.type -ge $cutOver)) {
                 # Create New Event
-                if ($SubjectAppend) {
-                    Convert-OGUserEvent -Event $individualEvent -CutOver $cutOver -SubjectAppend $SubjectAppend
+                if ($subjectAppend) {
+                    try {
+                        $converted = Convert-OGUserEvent -Event $seriesEvent -CutOver $cutOver -SubjectAppend $subjectAppend
+                        Write-ConvertEventLog -LogType "INFO" -User $userNewTenant.userPrincipalName -EventId $seriesEvent.id -Message $converted -LogPath $logPath
+                    }
+                    catch {
+                        Write-ConvertEventLog -LogType "ERROR" -User $userNewTenant.userPrincipalName -EventId $seriesEvent.id -Message $_ -LogPath $logPath
+                    }
                 }
                 else {
-                    Convert-OGUserEvent -Event $individualEvent -CutOver $cutOver
+                    try {
+                        $converted = Convert-OGUserEvent -Event $seriesEvent -CutOver $cutOver
+                        Write-ConvertEventLog -LogType "INFO" -User $userNewTenant.userPrincipalName -EventId $seriesEvent.id -Message $converted -LogPath $logPath
+                    }
+                    catch {
+                        Write-ConvertEventLog -LogType "ERROR" -User $userNewTenant.userPrincipalName -EventId $seriesEvent.id -Message $_ -LogPath $logPath
+                    }
                 }
             }
         }

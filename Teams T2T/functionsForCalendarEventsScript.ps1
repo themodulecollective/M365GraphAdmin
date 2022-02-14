@@ -102,11 +102,19 @@ function Convert-OGUserEvent {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)][PSObject]$Event,
-        [Parameter(Mandatory = $false)][datetime]$CutOver
+        [Parameter(Mandatory = $false)][datetime]$CutOver,
+        [Parameter(Mandatory)][string]$SubjectAppend
+
     )
     $Body = @{}
     if ($Event.subject) {
-        $body.subject = $Event.subject
+        if ($SubjectAppend) {
+            $Subject = $SubjectAppend + " - " + $Event.subject
+        }
+        else {
+            $Subject = $Event.subject
+        }
+        $body.subject = $Subject
     }
     if ($Event.body.content) {
         $updateContent = Remove-OGTeamsEventInfo -html $Event.body.content
@@ -133,9 +141,7 @@ function Convert-OGUserEvent {
     if ($event.recurrence) {
         $recurrence = [PSCustomObject]@{
             pattern = [PSCustomObject]@{
-                type       = $event.recurrence.pattern.type
-                interval   = $event.recurrence.pattern.interval
-                daysOfWeek = @($event.recurrence.pattern.daysofweek)
+                type = $event.recurrence.pattern.type
             }
             range   = [PSCustomObject]@{
                 type      = $event.recurrence.range.type
@@ -145,6 +151,24 @@ function Convert-OGUserEvent {
         if ($CutOver) {
             [string]$CutOver = $CutOver.ToString("yyyy-MM-dd")
             $recurrence.range.startDate = $CutOver
+        }
+        if ($event.recurrence.pattern.dayOfMonth) {
+            $recurrence.pattern | Add-Member -MemberType NoteProperty  -Name 'dayOfMonth' -Value $event.recurrence.pattern.dayOfMonth
+        }
+        if ($event.recurrence.pattern.daysOfWeek) {
+            $recurrence.pattern | Add-Member -MemberType NoteProperty  -Name 'daysOfWeek' -Value $event.recurrence.pattern.daysOfWeek
+        }
+        if ($event.recurrence.pattern.firstDayOfWeek) {
+            $recurrence.pattern | Add-Member -MemberType NoteProperty  -Name 'firstDayOfWeek' -Value $event.recurrence.pattern.firstDayOfWeek
+        }
+        if ($event.recurrence.pattern.index) {
+            $recurrence.pattern | Add-Member -MemberType NoteProperty  -Name 'index' -Value $event.recurrence.pattern.index
+        }
+        if ($event.recurrence.pattern.interval) {
+            $recurrence.pattern | Add-Member -MemberType NoteProperty  -Name 'interval' -Value $event.recurrence.pattern.interval
+        }
+        if ($event.recurrence.pattern.month) {
+            $recurrence.pattern | Add-Member -MemberType NoteProperty  -Name 'month' -Value $event.recurrence.pattern.month
         }
         if ($recurrence.range.type -ne "noEnd") {
             $recurrence.range | Add-Member -MemberType NoteProperty  -Name 'endDate' -Value $event.recurrence.range.endDate
@@ -176,6 +200,9 @@ function Convert-OGUserEvent {
         $allowNewTimeProposals = $event.allowNewTimeProposals
         $body.allowNewTimeProposals = $allowNewTimeProposals
     }
+    $body.isOnlineMeeting = "true"
+    $body.onlineMeetingProvider = "teamsForBusiness"
+
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
         Uri         = "https://graph.microsoft.com/$GraphVersion/users/$($Event.organizer.emailaddress.address)/events"
@@ -188,34 +215,124 @@ function Convert-OGUserEvent {
 Function Write-ConvertEventLog {
     [CmdletBinding()]
     Param(
-    [Parameter(Mandatory=$False)]
-    [ValidateSet("INFO","WARN","ERROR","FATAL","DEBUG")]
-    [String]
-    $LogType,
+        [Parameter(Mandatory = $False)]
+        [ValidateSet("INFO", "WARN", "ERROR", "FATAL", "DEBUG")]
+        [String]
+        $LogType,
 
-    [Parameter(Mandatory=$True)]
-    [string]
-    $User,
+        [Parameter(Mandatory = $True)]
+        [string]
+        $User,
 
-    [Parameter(Mandatory=$True)]
-    [string]
-    $EventId,
+        [Parameter(Mandatory = $True)]
+        [string]
+        $EventId,
 
-    [Parameter(Mandatory=$True)]
-    [string]
-    $Message,
+        [Parameter(Mandatory = $True)]
+        [string]
+        $Message,
 
-    [Parameter(Mandatory=$False)]
-    [string]
-    $LogPath
+        [Parameter(Mandatory = $False)]
+        [string]
+        $LogPath
     )
 
     $logObject = [PSCustomObject]@{
-        Time = $((Get-Date).toString("yyyy/MM/dd HH:mm:ss"))
+        Time    = $((Get-Date).toString("yyyy/MM/dd HH:mm:ss"))
         LogType = $LogType
-        UPN = $User
+        UPN     = $User
         EventId = $EventId
         Message = $Message
     }
     Export-Csv -Path $LogPath -InputObject $logObject -NoTypeInformation -Append
+}
+function ConvertFrom-Base64UrlString {
+    <#
+    .SYNOPSIS
+    Base64url decoder.
+     
+    .DESCRIPTION
+    Decodes base64url-encoded string to the original string or byte array.
+     
+    .PARAMETER Base64UrlString
+    Specifies the encoded input. Mandatory string.
+     
+    .PARAMETER AsByteArray
+    Optional switch. If specified, outputs byte array instead of string.
+     
+    .INPUTS
+    You can pipe the string input to ConvertFrom-Base64UrlString.
+     
+    .OUTPUTS
+    ConvertFrom-Base64UrlString returns decoded string by default, or the bytes if -AsByteArray is used.
+     
+    .EXAMPLE
+     
+    PS Variable:> 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9' | ConvertFrom-Base64UrlString
+    {"alg":"RS256","typ":"JWT"}
+     
+    .LINK
+    https://github.com/SP3269/posh-jwt
+    .LINK
+    https://jwt.io/
+     
+    #>
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)][string]$Base64UrlString,
+        [Parameter(Mandatory = $false)][switch]$AsByteArray
+    )
+    $s = $Base64UrlString.replace('-', '+').replace('_', '/')
+    switch ($s.Length % 4) {
+        0 { $s = $s }
+        1 { $s = $s.Substring(0, $s.Length - 1) }
+        2 { $s = $s + "==" }
+        3 { $s = $s + "=" }
+    }
+    if ($AsByteArray) {
+        return [Convert]::FromBase64String($s) # Returning byte array - convert to string by using [System.Text.Encoding]::{{UTF8|Unicode|ASCII}}.GetString($s)
+    }
+    else {
+        return [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($s))
+    }
+}
+function Get-JwtPayload {
+    <#
+        .SYNOPSIS
+        Gets JSON payload from a JWT (JSON Web Token).
+         
+        .DESCRIPTION
+        Decodes and extracts JSON payload from JWT. Ignores headers and signature.
+         
+        .PARAMETER jwt
+        Specifies the JWT. Mandatory string.
+         
+        .INPUTS
+        You can pipe JWT as a string object to Get-JwtPayload.
+         
+        .OUTPUTS
+        String. Get-JwtPayload returns decoded payload part of the JWT.
+         
+        .EXAMPLE
+         
+        PS Variable:> $jwt | Get-JwtPayload -Verbose
+        VERBOSE: Processing JWT: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbjEiOiJ2YWx1ZTEiLCJ0b2tlbjIiOiJ2YWx1ZTIifQ.Kd12ryF7Uuk9Y1UWsqdSk6cXNoYZBf9GBoqcEz7R5e4ve1Kyo0WmSr-q4XEjabcbaG0hHJyNGhLDMq6BaIm-hu8ehKgDkvLXPCh15j9AzabQB4vuvSXSWV3MQO7v4Ysm7_sGJQjrmpiwRoufFePcurc94anLNk0GNkTWwG59wY4rHaaHnMXx192KnJojwMR8mK-0_Q6TJ3bK8lTrQqqavnCW9vrKoWoXkqZD_4Qhv2T6vZF7sPkUrgsytgY21xABQuyFrrNLOI1g-EdBa7n1vIyeopM4n6_Uk-ttZp-U9wpi1cgg2pRIWYV5ZT0AwZwy0QyPPx8zjh7EVRpgAKXDAg
+        {"token1":"value1","token2":"value2"}
+         
+        .LINK
+        https://github.com/SP3269/posh-jwt
+        .LINK
+        https://jwt.io/
+         
+        #>
+            
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)][string]$jwt
+    )
+        
+    Write-Verbose "Processing JWT: $jwt"
+    $parts = $jwt.Split('.')
+    $payload = ConvertFrom-Base64UrlString $parts[1]
+    return $payload
 }

@@ -125,61 +125,18 @@ function Convert-OGUserEvent {
         $body.body = $bodycontent
     }
     if ($Event.start) {
-        $start = [PSCustomObject]@{
-            dateTime = $Event.start.dateTime
-            timeZone = $Event.start.timeZone
-        }
-        $body.start = $start
+        $body.start = $Event.start
     }
     if ($Event.end) {
-        $end = [PSCustomObject]@{
-            dateTime = $Event.end.dateTime
-            timeZone = $Event.end.timeZone
+        $body.end = $Event.end
         }
-        $body.end = $end
-    }
     if ($event.recurrence) {
-        $recurrence = [PSCustomObject]@{
-            pattern = [PSCustomObject]@{
-                type = $event.recurrence.pattern.type
-            }
-            range   = [PSCustomObject]@{
-                type      = $event.recurrence.range.type
-                startDate = $event.recurrence.range.startDate
-            }
-        }
-        if ($CutOver) {
-            [string]$CutOver = $CutOver.ToString("yyyy-MM-dd")
-            $recurrence.range.startDate = $CutOver
-        }
-        if ($event.recurrence.pattern.dayOfMonth) {
-            $recurrence.pattern | Add-Member -MemberType NoteProperty  -Name 'dayOfMonth' -Value $event.recurrence.pattern.dayOfMonth
-        }
-        if ($event.recurrence.pattern.daysOfWeek) {
-            $recurrence.pattern | Add-Member -MemberType NoteProperty  -Name 'daysOfWeek' -Value $event.recurrence.pattern.daysOfWeek
-        }
-        if ($event.recurrence.pattern.firstDayOfWeek) {
-            $recurrence.pattern | Add-Member -MemberType NoteProperty  -Name 'firstDayOfWeek' -Value $event.recurrence.pattern.firstDayOfWeek
-        }
-        if ($event.recurrence.pattern.index) {
-            $recurrence.pattern | Add-Member -MemberType NoteProperty  -Name 'index' -Value $event.recurrence.pattern.index
-        }
-        if ($event.recurrence.pattern.interval) {
-            $recurrence.pattern | Add-Member -MemberType NoteProperty  -Name 'interval' -Value $event.recurrence.pattern.interval
-        }
-        if ($event.recurrence.pattern.month) {
-            $recurrence.pattern | Add-Member -MemberType NoteProperty  -Name 'month' -Value $event.recurrence.pattern.month
-        }
-        if ($recurrence.range.type -ne "noEnd") {
-            $recurrence.range | Add-Member -MemberType NoteProperty  -Name 'endDate' -Value $event.recurrence.range.endDate
-        }
-        $body.recurrence = $recurrence
+        $body.recurrence = $event.recurrence
     }
     if ($event.location.displayName) {
         $location = [PSCustomObject]@{
             displayName = $event.location.displayName
         }
-        $body.location = $location
     }
     if ($event.attendees) {
         $array = @(

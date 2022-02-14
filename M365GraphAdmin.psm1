@@ -235,6 +235,78 @@ function Convert-OGUserEvent {
         $body.body = $bodycontent
     }
     if ($Event.start) {
+        $body.start = $Event.start
+    }
+    if ($Event.end) {
+        $body.end = $Event.end
+        }
+    if ($event.recurrence) {
+        $body.recurrence = $event.recurrence
+    }
+    if ($event.location.displayName) {
+        $location = [PSCustomObject]@{
+            displayName = $event.location.displayName
+        }
+    }
+    if ($event.attendees) {
+        $array = @(
+            foreach ($attendeeItem in $event.attendees) {
+                $attendees = @{}
+                $emailAddress = [PSCustomObject]@{
+                    address = $attendeeItem.emailAddress.address
+                    name    = $attendeeItem.emailAddress.name
+                }
+                $attendees.emailaddress = $emailAddress
+                $type = $attendeeItem.type
+                $attendees.type = $type
+                $attendees
+            })
+        $body.attendees = $array
+    }
+    if ($event.allowNewTimeProposals) {
+        $allowNewTimeProposals = $event.allowNewTimeProposals
+        $body.allowNewTimeProposals = $allowNewTimeProposals
+    }
+    $body.isOnlineMeeting = "true"
+    $body.onlineMeetingProvider = "teamsForBusiness"
+
+    $account_params = @{
+        Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
+        Uri         = "https://graph.microsoft.com/$GraphVersion/users/$($Event.organizer.emailaddress.address)/events"
+        body        = $Body | ConvertTo-Json -Depth 10
+        Method      = 'POST'
+        ContentType = 'application/json'
+    }
+    Invoke-RestMethod @Account_params
+}
+# OLD VERSION
+function OldConvert-OGUserEvent {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory)][PSObject]$Event,
+        [Parameter(Mandatory = $false)][datetime]$CutOver,
+        [Parameter(Mandatory)][string]$SubjectAppend
+
+    )
+    $Body = @{}
+    if ($Event.subject) {
+        if ($SubjectAppend) {
+            $Subject = $SubjectAppend + " - " + $Event.subject
+        }
+        else {
+            $Subject = $Event.subject
+        }
+        $body.subject = $Subject
+    }
+    if ($Event.body.content) {
+        $updateContent = Remove-OGTeamsEventInfo -html $Event.body.content
+        $bodyContent = [PSCustomObject]@{
+            contentType = "HTML"
+            content     = $updateContent
+        }
+        $body.body = $bodycontent
+    }
+    if ($Event.start) {
         $start = [PSCustomObject]@{
             dateTime = $Event.start.dateTime
             timeZone = $Event.start.timeZone
@@ -251,7 +323,7 @@ function Convert-OGUserEvent {
     if ($event.recurrence) {
         $recurrence = [PSCustomObject]@{
             pattern = [PSCustomObject]@{
-                type       = $event.recurrence.pattern.type
+                type = $event.recurrence.pattern.type
             }
             range   = [PSCustomObject]@{
                 type      = $event.recurrence.range.type
@@ -282,12 +354,6 @@ function Convert-OGUserEvent {
         }
         if ($recurrence.range.type -ne "noEnd") {
             $recurrence.range | Add-Member -MemberType NoteProperty  -Name 'endDate' -Value $event.recurrence.range.endDate
-        }
-        if ($recurrence.range.numberOfOccurrences) {
-            $recurrence.range | Add-Member -MemberType NoteProperty  -Name 'numberOfOccurrences' -Value $event.recurrence.range.numberOfOccurrences
-        }
-        if ($event.recurrence.range.recurrenceTimeZone) {
-            $recurrence.range | Add-Member -MemberType NoteProperty  -Name 'recurrenceTimeZone' -Value $event.recurrence.range.recurrenceTimeZone
         }
         $body.recurrence = $recurrence
     }

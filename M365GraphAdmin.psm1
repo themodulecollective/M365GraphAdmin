@@ -283,6 +283,12 @@ function Convert-OGUserEvent {
         if ($recurrence.range.type -ne "noEnd") {
             $recurrence.range | Add-Member -MemberType NoteProperty  -Name 'endDate' -Value $event.recurrence.range.endDate
         }
+        if ($recurrence.range.numberOfOccurrences) {
+            $recurrence.range | Add-Member -MemberType NoteProperty  -Name 'numberOfOccurrences' -Value $event.recurrence.range.numberOfOccurrences
+        }
+        if ($event.recurrence.range.recurrenceTimeZone) {
+            $recurrence.range | Add-Member -MemberType NoteProperty  -Name 'recurrenceTimeZone' -Value $event.recurrence.range.recurrenceTimeZone
+        }
         $body.recurrence = $recurrence
     }
     if ($event.location.displayName) {

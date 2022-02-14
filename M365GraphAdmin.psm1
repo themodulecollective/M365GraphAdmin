@@ -208,6 +208,7 @@ function Remove-OGTeamsEventInfo {
         }
     }
 }
+
 function Convert-OGUserEvent {
     [CmdletBinding()]
     param (
@@ -241,6 +242,11 @@ function Convert-OGUserEvent {
         $body.end = $Event.end
         }
     if ($event.recurrence) {
+        $recurrence = $event.recurrence
+        if ($CutOver) {
+            [string]$CutOver = $CutOver.ToString("yyyy-MM-dd")
+            $recurrence.range.startDate = $CutOver
+        }
         $body.recurrence = $event.recurrence
     }
     if ($event.location.displayName) {

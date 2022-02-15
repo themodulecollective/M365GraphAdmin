@@ -249,10 +249,8 @@ function Convert-OGUserEvent {
         }
         $body.recurrence = $event.recurrence
     }
-    if ($event.location.displayName) {
-        $location = [PSCustomObject]@{
-            displayName = $event.location.displayName
-        }
+    if ($event.location) {
+        $body.location = $event.location
     }
     if ($event.attendees) {
         $array = @(

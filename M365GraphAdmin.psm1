@@ -268,12 +268,41 @@ function Convert-OGUserEvent {
         $body.attendees = $array
     }
     if ($event.allowNewTimeProposals) {
-        $allowNewTimeProposals = $event.allowNewTimeProposals
-        $body.allowNewTimeProposals = $allowNewTimeProposals
+        $body.allowNewTimeProposals = $event.allowNewTimeProposals
     }
-    $body.isOnlineMeeting = "true"
-    $body.onlineMeetingProvider = "teamsForBusiness"
-
+    if ($event.isOnlineMeeting) {
+        $body.isOnlineMeeting = $event.isOnlineMeeting
+    }
+    if ($event.onlineMeetingProvider) {
+        $body.onlineMeetingProvider = $event.onlineMeetingProvider
+    }
+    if ($event.hideAttendees) {
+        $body.hideAttendees = $event.hideAttendees
+    }
+    if ($event.isAllDay) {
+        $body.isAllDay = $event.isAllDay
+    }
+    if ($event.locations) {
+        $body.locations = $event.locations
+    }
+    if ($event.originalStart) {
+        $body.originalStart = $event.originalStart
+    }
+    if ($event.originalStartTimeZone) {
+        $body.originalStartTimeZone = $event.originalStartTimeZone
+    }
+    if ($event.reminderMinutesBeforeStart) {
+        $body.reminderMinutesBeforeStart = $event.reminderMinutesBeforeStart
+    }
+    if ($event.responseRequested) {
+        $body.responseRequested = $event.responseRequested
+    }
+    if ($event.sensitivity) {
+        $body.sensitivity = $event.sensitivity
+    }
+    if ($event.showAs) {
+        $body.showAs = $event.showAs
+    }
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
         Uri         = "https://graph.microsoft.com/$GraphVersion/users/$($Event.organizer.emailaddress.address)/events"

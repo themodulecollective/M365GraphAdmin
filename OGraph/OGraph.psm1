@@ -9,17 +9,11 @@
 # SharePoint Online
 # Here Be the Dragons of SPO
 
-# Notes: ToDo items are placed hierarchically. Examples: ToDos for the entire module, place at top. ToDo for a Section, place at top of section. ToDo for a specific function, place within function at top.
-
-# Discuss Module dependency for MSAL.PS. Get-MSALTOKEN
-
-# DEFAULT GRAPH VERSION
-
-$Script:GraphVersion = "v1.0"
 
 # HELPER FUNCTIONS
 
-function Get-OGNextPage {
+function Get-OGNextPage
+{
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $True)][string]$URI,
@@ -31,14 +25,17 @@ function Get-OGNextPage {
         Method      = 'GET'
         ContentType = 'application/json'
     }
-    if ($SearchDisplayName) {
-        $account_params.headers.add("ConsistencyLevel", "eventual")
+    if ($SearchDisplayName)
+    {
+        $account_params.headers.add('ConsistencyLevel', 'eventual')
     }
     $Result = Invoke-RestMethod @Account_params
-    if ($results."@odata.nextlink") {
-        Get-OGNextPage -Uri $results."@odata.nextlink"
+    if ($results.'@odata.nextlink')
+    {
+        Get-OGNextPage -Uri $results.'@odata.nextlink'
     }
-    elseif (!$results."@odata.nextlink") {
+    elseif (!$results.'@odata.nextlink')
+    {
         $Result.Value
     }
 }
@@ -48,7 +45,8 @@ function Get-OGNextPage {
 ## ToDo: Combine all into single function Get-GraphAccessToken?
 
 
-function Set-OGVersion {
+function Set-OGVersion
+{
     [CmdletBinding(DefaultParameterSetName = 'v1')]
     param (
         [Parameter(Mandatory = $false,
@@ -56,19 +54,22 @@ function Set-OGVersion {
         [Parameter(Mandatory = $false,
             ParameterSetName = 'v1')][switch]$v1
     )
-    if ($v1) {
-        $Script:GraphVersion = "v1.0"
-    } 
-    if ($Beta) {
-        $Script:GraphVersion = "beta"
-    }   
+    if ($v1)
+    {
+        $Script:GraphVersion = 'v1.0'
+    }
+    if ($Beta)
+    {
+        $Script:GraphVersion = 'beta'
+    }
 }
-function Get-OGAzureKey {
+function Get-OGAzureKey
+{
 
     $ClientID = '1950a258-227b-4e31-a9cf-717495945fc2'
     $TenantID = 'common'
-    $Resource = "https://graph.microsoft.com/"
-    
+    $Resource = 'https://graph.microsoft.com/'
+
     $DeviceCodeRequestParams = @{
         Method = 'POST'
         Uri    = "https://login.microsoftonline.com/$TenantID/oauth2/devicecode"
@@ -77,16 +78,16 @@ function Get-OGAzureKey {
             resource  = $Resource
         }
     }
-    
+
     $DeviceCodeRequest = Invoke-RestMethod @DeviceCodeRequestParams
     Write-Host $DeviceCodeRequest.message -ForegroundColor Yellow
-    Read-Host -Prompt "Press any key to continue"
+    Read-Host -Prompt 'Press any key to continue'
 
     $TokenRequestParams = @{
         Method = 'POST'
         Uri    = "https://login.microsoftonline.com/$TenantId/oauth2/token"
         Body   = @{
-            grant_type = "urn:ietf:params:oauth:grant-type:device_code"
+            grant_type = 'urn:ietf:params:oauth:grant-type:device_code'
             code       = $DeviceCodeRequest.device_code
             client_id  = $ClientId
         }
@@ -94,23 +95,25 @@ function Get-OGAzureKey {
     $TokenRequest = Invoke-RestMethod @TokenRequestParams
     $Script:GraphAPIKey = $TokenRequest.access_token
 }
-function Get-OGAPIKey {
+function Get-OGAPIKey
+{
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$ApplicationID,
         [Parameter(Mandatory)]$TenantId,
         [Parameter(Mandatory)]$AccessSecret
     )
-    $Body = @{    
-        Grant_Type    = "client_credentials"
-        Scope         = "https://graph.microsoft.com/.default"
+    $Body = @{
+        Grant_Type    = 'client_credentials'
+        Scope         = 'https://graph.microsoft.com/.default'
         client_Id     = $ApplicationID
         Client_Secret = $AccessSecret
-    } 
+    }
     $ConnectGraph = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token" -Method POST -Body $Body
     $Script:GraphAPIKey = $ConnectGraph.access_token
 }
-function Connect-OGMsolService {
+function Connect-OGMsolService
+{
     ## todo: add token refresh
     [CmdletBinding()]
     param (
@@ -118,23 +121,25 @@ function Connect-OGMsolService {
         [Parameter(Mandatory)]$TenantId,
         [Parameter(Mandatory)]$AccessSecret
     )
-    $Body = @{    
-        Grant_Type    = "client_credentials"
-        Scope         = "https://graph.microsoft.com/.default"
+    $Body = @{
+        Grant_Type    = 'client_credentials'
+        Scope         = 'https://graph.microsoft.com/.default'
         client_Id     = $ApplicationID
         Client_Secret = $AccessSecret
-    } 
+    }
     $ConnectGraph = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token" -Method POST -Body $Body
     $Script:GraphAPIKey = $ConnectGraph.access_token
 }
-function Consent-OGMsolService {
+function Consent-OGMsolService
+{
     ## todo: add administrator consent flow
     ## todo: add token refresh
-    start "https://login.microsoftonline.com/common/adminconsent?client_id=f6557fc2-d4a5-4266-8f4c-2bdcd0cd9a2d"
+    Start-Process 'https://login.microsoftonline.com/common/adminconsent?client_id=f6557fc2-d4a5-4266-8f4c-2bdcd0cd9a2d'
 }
 # AZUREAD ADMINISTRATION
 # Users
-function Get-OGUser {
+function Get-OGUser
+{
     [CmdletBinding(DefaultParameterSetName = 'UPN')]
     param (
         [Parameter(Mandatory = $False,
@@ -144,7 +149,8 @@ function Get-OGUser {
         [Parameter(Mandatory = $False,
             ParameterSetName = 'All')][Switch]$All
     )
-    if ($UserPrincipalName) {
+    if ($UserPrincipalName)
+    {
         $account_params = @{
             Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
             URI         = "https://graph.microsoft.com/$GraphVersion/users/$userprincipalname"
@@ -153,63 +159,75 @@ function Get-OGUser {
         }
         Invoke-RestMethod @Account_params
     }
-    if ($SearchDisplayName) {
+    if ($SearchDisplayName)
+    {
         $URI = "https://graph.microsoft.com/$GraphVersion/users?`$search=`"displayName:$SearchDisplayName`""
         Get-OGNextPage -uri $URI -SearchDisplayName
     }
-    if ($All) {
+    if ($All)
+    {
         $URI = "https://graph.microsoft.com/$GraphVersion/users"
         Get-OGNextPage -Uri $URI
-    }   
+    }
 }
-function Get-OGUserEvents {
+function Get-OGUserEvents
+{
     param (
         [Parameter(Mandatory = $True)]$UserPrincipalName,
         [Parameter(Mandatory = $False)]$Filter
     )
-    if ($filter) {
-        
+    if ($filter)
+    {
+
         $URI = "https://graph.microsoft.com/$GraphVersion/users/$userprincipalname/events?`$filter=$filter"
         Get-OGNextPage -URI $URI
     }
-    else {
+    else
+    {
         $URI = "https://graph.microsoft.com/$GraphVersion/users/$userprincipalname/events"
         Get-OGNextPage -URI $URI
     }
 }
-function Get-OGGroupEvents {
+function Get-OGGroupEvents
+{
     param (
         [Parameter(Mandatory = $True)]$GroupId,
         [Parameter(Mandatory = $False)]$Filter
     )
-    if ($filter) {
-        
+    if ($filter)
+    {
+
         $URI = "https://graph.microsoft.com/$GraphVersion/groups/$GroupId/events?`$filter=$filter"
         Get-OGNextPage -URI $URI
     }
-    else {
+    else
+    {
         $URI = "https://graph.microsoft.com/$GraphVersion/groups/$GroupId/events"
         Get-OGNextPage -URI $URI
     }
 }
-function Remove-OGTeamsEventInfo {
+function Remove-OGTeamsEventInfo
+{
     param (
         [Parameter(Mandatory = $True)]$html
     )
-    $stringbyline = $html -split "`r`n" 
-    $Underscores = $stringbyline | Select-String "________________________________________________________________________________"
-    if ($Underscores) {
+    $stringbyline = $html -split "`r`n"
+    $Underscores = $stringbyline | Select-String '________________________________________________________________________________'
+    if ($Underscores)
+    {
         $Startline = $Underscores[0].LineNumber - 2
         $Endline = $Underscores[1].LineNumber
-        $expectedContent = $stringbyline[$Startline..$Endline] | Select-String -simplematch "teams.microsoft.com"
-        if ($expectedContent) {
+        $expectedContent = $stringbyline[$Startline..$Endline] | Select-String -SimpleMatch 'teams.microsoft.com'
+        if ($expectedContent)
+        {
             $TotalLines = $stringbyline.count - 1
             $stringbyline[0..$Startline], $stringbyline[$Endline..$TotalLines] | Out-String
         }
     }
 }
 
-function Convert-OGUserEvent {
+function Convert-OGUserEvent
+{
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)][PSObject]$Event,
@@ -218,43 +236,54 @@ function Convert-OGUserEvent {
 
     )
     $Body = @{}
-    if ($Event.subject) {
-        if ($SubjectAppend) {
-            $Subject = $SubjectAppend + " - " + $Event.subject
+    if ($Event.subject)
+    {
+        if ($SubjectAppend)
+        {
+            $Subject = $SubjectAppend + ' - ' + $Event.subject
         }
-        else {
+        else
+        {
             $Subject = $Event.subject
         }
         $body.subject = $Subject
     }
-    if ($Event.body.content) {
+    if ($Event.body.content)
+    {
         $updateContent = Remove-OGTeamsEventInfo -html $Event.body.content
         $bodyContent = [PSCustomObject]@{
-            contentType = "HTML"
+            contentType = 'HTML'
             content     = $updateContent
         }
         $body.body = $bodycontent
     }
-    if ($Event.start) {
+    if ($Event.start)
+    {
         $body.start = $Event.start
     }
-    if ($Event.end) {
+    if ($Event.end)
+    {
         $body.end = $Event.end
-        }
-    if ($event.recurrence) {
+    }
+    if ($event.recurrence)
+    {
         $recurrence = $event.recurrence
-        if ($CutOver) {
-            [string]$CutOver = $CutOver.ToString("yyyy-MM-dd")
+        if ($CutOver)
+        {
+            [string]$CutOver = $CutOver.ToString('yyyy-MM-dd')
             $recurrence.range.startDate = $CutOver
         }
         $body.recurrence = $event.recurrence
     }
-    if ($event.location) {
+    if ($event.location)
+    {
         $body.location = $event.location
     }
-    if ($event.attendees) {
+    if ($event.attendees)
+    {
         $array = @(
-            foreach ($attendeeItem in $event.attendees) {
+            foreach ($attendeeItem in $event.attendees)
+            {
                 $attendees = @{}
                 $emailAddress = [PSCustomObject]@{
                     address = $attendeeItem.emailAddress.address
@@ -267,40 +296,52 @@ function Convert-OGUserEvent {
             })
         $body.attendees = $array
     }
-    if ($event.allowNewTimeProposals) {
+    if ($event.allowNewTimeProposals)
+    {
         $body.allowNewTimeProposals = $event.allowNewTimeProposals
     }
-    if ($event.isOnlineMeeting) {
+    if ($event.isOnlineMeeting)
+    {
         $body.isOnlineMeeting = $event.isOnlineMeeting
     }
-    if ($event.onlineMeetingProvider) {
+    if ($event.onlineMeetingProvider)
+    {
         $body.onlineMeetingProvider = $event.onlineMeetingProvider
     }
-    if ($event.hideAttendees) {
+    if ($event.hideAttendees)
+    {
         $body.hideAttendees = $event.hideAttendees
     }
-    if ($event.isAllDay) {
+    if ($event.isAllDay)
+    {
         $body.isAllDay = $event.isAllDay
     }
-    if ($event.locations) {
+    if ($event.locations)
+    {
         $body.locations = $event.locations
     }
-    if ($event.originalStart) {
+    if ($event.originalStart)
+    {
         $body.originalStart = $event.originalStart
     }
-    if ($event.originalStartTimeZone) {
+    if ($event.originalStartTimeZone)
+    {
         $body.originalStartTimeZone = $event.originalStartTimeZone
     }
-    if ($event.reminderMinutesBeforeStart) {
+    if ($event.reminderMinutesBeforeStart)
+    {
         $body.reminderMinutesBeforeStart = $event.reminderMinutesBeforeStart
     }
-    if ($event.responseRequested) {
+    if ($event.responseRequested)
+    {
         $body.responseRequested = $event.responseRequested
     }
-    if ($event.sensitivity) {
+    if ($event.sensitivity)
+    {
         $body.sensitivity = $event.sensitivity
     }
-    if ($event.showAs) {
+    if ($event.showAs)
+    {
         $body.showAs = $event.showAs
     }
     $account_params = @{
@@ -313,7 +354,8 @@ function Convert-OGUserEvent {
     Invoke-RestMethod @Account_params
 }
 # OLD VERSION
-function OldConvert-OGUserEvent {
+function OldConvert-OGUserEvent
+{
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)][PSObject]$Event,
@@ -322,38 +364,45 @@ function OldConvert-OGUserEvent {
 
     )
     $Body = @{}
-    if ($Event.subject) {
-        if ($SubjectAppend) {
-            $Subject = $SubjectAppend + " - " + $Event.subject
+    if ($Event.subject)
+    {
+        if ($SubjectAppend)
+        {
+            $Subject = $SubjectAppend + ' - ' + $Event.subject
         }
-        else {
+        else
+        {
             $Subject = $Event.subject
         }
         $body.subject = $Subject
     }
-    if ($Event.body.content) {
+    if ($Event.body.content)
+    {
         $updateContent = Remove-OGTeamsEventInfo -html $Event.body.content
         $bodyContent = [PSCustomObject]@{
-            contentType = "HTML"
+            contentType = 'HTML'
             content     = $updateContent
         }
         $body.body = $bodycontent
     }
-    if ($Event.start) {
+    if ($Event.start)
+    {
         $start = [PSCustomObject]@{
             dateTime = $Event.start.dateTime
             timeZone = $Event.start.timeZone
         }
         $body.start = $start
     }
-    if ($Event.end) {
+    if ($Event.end)
+    {
         $end = [PSCustomObject]@{
             dateTime = $Event.end.dateTime
             timeZone = $Event.end.timeZone
         }
         $body.end = $end
     }
-    if ($event.recurrence) {
+    if ($event.recurrence)
+    {
         $recurrence = [PSCustomObject]@{
             pattern = [PSCustomObject]@{
                 type = $event.recurrence.pattern.type
@@ -363,42 +412,53 @@ function OldConvert-OGUserEvent {
                 startDate = $event.recurrence.range.startDate
             }
         }
-        if ($CutOver) {
-            [string]$CutOver = $CutOver.ToString("yyyy-MM-dd")
+        if ($CutOver)
+        {
+            [string]$CutOver = $CutOver.ToString('yyyy-MM-dd')
             $recurrence.range.startDate = $CutOver
         }
-        if ($event.recurrence.pattern.dayOfMonth) {
-            $recurrence.pattern | Add-Member -MemberType NoteProperty  -Name 'dayOfMonth' -Value $event.recurrence.pattern.dayOfMonth
+        if ($event.recurrence.pattern.dayOfMonth)
+        {
+            $recurrence.pattern | Add-Member -MemberType NoteProperty -Name 'dayOfMonth' -Value $event.recurrence.pattern.dayOfMonth
         }
-        if ($event.recurrence.pattern.daysOfWeek) {
-            $recurrence.pattern | Add-Member -MemberType NoteProperty  -Name 'daysOfWeek' -Value $event.recurrence.pattern.daysOfWeek
+        if ($event.recurrence.pattern.daysOfWeek)
+        {
+            $recurrence.pattern | Add-Member -MemberType NoteProperty -Name 'daysOfWeek' -Value $event.recurrence.pattern.daysOfWeek
         }
-        if ($event.recurrence.pattern.firstDayOfWeek) {
-            $recurrence.pattern | Add-Member -MemberType NoteProperty  -Name 'firstDayOfWeek' -Value $event.recurrence.pattern.firstDayOfWeek
+        if ($event.recurrence.pattern.firstDayOfWeek)
+        {
+            $recurrence.pattern | Add-Member -MemberType NoteProperty -Name 'firstDayOfWeek' -Value $event.recurrence.pattern.firstDayOfWeek
         }
-        if ($event.recurrence.pattern.index) {
-            $recurrence.pattern | Add-Member -MemberType NoteProperty  -Name 'index' -Value $event.recurrence.pattern.index
+        if ($event.recurrence.pattern.index)
+        {
+            $recurrence.pattern | Add-Member -MemberType NoteProperty -Name 'index' -Value $event.recurrence.pattern.index
         }
-        if ($event.recurrence.pattern.interval) {
-            $recurrence.pattern | Add-Member -MemberType NoteProperty  -Name 'interval' -Value $event.recurrence.pattern.interval
+        if ($event.recurrence.pattern.interval)
+        {
+            $recurrence.pattern | Add-Member -MemberType NoteProperty -Name 'interval' -Value $event.recurrence.pattern.interval
         }
-        if ($event.recurrence.pattern.month) {
-            $recurrence.pattern | Add-Member -MemberType NoteProperty  -Name 'month' -Value $event.recurrence.pattern.month
+        if ($event.recurrence.pattern.month)
+        {
+            $recurrence.pattern | Add-Member -MemberType NoteProperty -Name 'month' -Value $event.recurrence.pattern.month
         }
-        if ($recurrence.range.type -ne "noEnd") {
-            $recurrence.range | Add-Member -MemberType NoteProperty  -Name 'endDate' -Value $event.recurrence.range.endDate
+        if ($recurrence.range.type -ne 'noEnd')
+        {
+            $recurrence.range | Add-Member -MemberType NoteProperty -Name 'endDate' -Value $event.recurrence.range.endDate
         }
         $body.recurrence = $recurrence
     }
-    if ($event.location.displayName) {
+    if ($event.location.displayName)
+    {
         $location = [PSCustomObject]@{
             displayName = $event.location.displayName
         }
         $body.location = $location
     }
-    if ($event.attendees) {
+    if ($event.attendees)
+    {
         $array = @(
-            foreach ($attendeeItem in $event.attendees) {
+            foreach ($attendeeItem in $event.attendees)
+            {
                 $attendees = @{}
                 $emailAddress = [PSCustomObject]@{
                     address = $attendeeItem.emailAddress.address
@@ -411,12 +471,13 @@ function OldConvert-OGUserEvent {
             })
         $body.attendees = $array
     }
-    if ($event.allowNewTimeProposals) {
+    if ($event.allowNewTimeProposals)
+    {
         $allowNewTimeProposals = $event.allowNewTimeProposals
         $body.allowNewTimeProposals = $allowNewTimeProposals
     }
-    $body.isOnlineMeeting = "true"
-    $body.onlineMeetingProvider = "teamsForBusiness"
+    $body.isOnlineMeeting = 'true'
+    $body.onlineMeetingProvider = 'teamsForBusiness'
 
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
@@ -427,7 +488,8 @@ function OldConvert-OGUserEvent {
     }
     Invoke-RestMethod @Account_params
 }
-function Convert-OGGroupEvent {
+function Convert-OGGroupEvent
+{
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)][PSObject]$Event,
@@ -435,32 +497,37 @@ function Convert-OGGroupEvent {
         [Parameter(Mandatory = $false)][datetime]$CutOver
     )
     $Body = @{}
-    if ($Event.subject) {
+    if ($Event.subject)
+    {
         $body.subject = $Event.subject
     }
-    if ($Event.body.content) {
+    if ($Event.body.content)
+    {
         $updateContent = Remove-OGTeamsEventInfo -html $Event.body.content
         $bodyContent = [PSCustomObject]@{
-            contentType = "HTML"
+            contentType = 'HTML'
             content     = $updateContent
         }
         $body.body = $bodycontent
     }
-    if ($Event.start) {
+    if ($Event.start)
+    {
         $start = [PSCustomObject]@{
             dateTime = $Event.start.dateTime
             timeZone = $Event.start.timeZone
         }
         $body.start = $start
     }
-    if ($Event.end) {
+    if ($Event.end)
+    {
         $end = [PSCustomObject]@{
             dateTime = $Event.end.dateTime
             timeZone = $Event.end.timeZone
         }
         $body.end = $end
     }
-    if ($event.recurrence) {
+    if ($event.recurrence)
+    {
         $recurrence = [PSCustomObject]@{
             pattern = [PSCustomObject]@{
                 type       = $event.recurrence.pattern.type
@@ -472,24 +539,29 @@ function Convert-OGGroupEvent {
                 startDate = $event.recurrence.range.startDate
             }
         }
-        if ($CutOver) {
-            [string]$CutOver = $CutOver.ToString("yyyy-MM-dd")
+        if ($CutOver)
+        {
+            [string]$CutOver = $CutOver.ToString('yyyy-MM-dd')
             $recurrence.range.startDate = $CutOver
         }
-        if ($recurrence.range.type -ne "noEnd") {
-            $recurrence.range | Add-Member -MemberType NoteProperty  -Name 'endDate' -Value $event.recurrence.range.endDate
+        if ($recurrence.range.type -ne 'noEnd')
+        {
+            $recurrence.range | Add-Member -MemberType NoteProperty -Name 'endDate' -Value $event.recurrence.range.endDate
         }
         $body.recurrence = $recurrence
     }
-    if ($event.location.displayName) {
+    if ($event.location.displayName)
+    {
         $location = [PSCustomObject]@{
             displayName = $event.location.displayName
         }
         $body.location = $location
     }
-    if ($event.attendees) {
+    if ($event.attendees)
+    {
         $array = @(
-            foreach ($attendeeItem in $event.attendees) {
+            foreach ($attendeeItem in $event.attendees)
+            {
                 $attendees = @{}
                 $emailAddress = [PSCustomObject]@{
                     address = $attendeeItem.emailAddress.address
@@ -502,12 +574,13 @@ function Convert-OGGroupEvent {
             })
         $body.attendees = $array
     }
-    if ($event.allowNewTimeProposals) {
+    if ($event.allowNewTimeProposals)
+    {
         $allowNewTimeProposals = $event.allowNewTimeProposals
         $body.allowNewTimeProposals = $allowNewTimeProposals
     }
-    $body.isOnlineMeeting = "true"
-    $body.onlineMeetingProvider = "teamsForBusiness"
+    $body.isOnlineMeeting = 'true'
+    $body.onlineMeetingProvider = 'teamsForBusiness'
 
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
@@ -521,7 +594,8 @@ function Convert-OGGroupEvent {
 #$Body = new-object -name body -Property $Body -TypeName psobject
 
 
-function Set-OGUser {
+function Set-OGUser
+{
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory)]$UserPrincipalName,
@@ -533,20 +607,25 @@ function Set-OGUser {
     )
     $User = Get-GraphUser -UserPrincipalName $UserPrincipalName
     $bodyparams = @{}
-    if ($NewUserPrincipalName) {
-        $bodyparams.add("userPrincipalName", $NewUserPrincipalName)
+    if ($NewUserPrincipalName)
+    {
+        $bodyparams.add('userPrincipalName', $NewUserPrincipalName)
     }
-    if ($accountEnabled) {
-        $bodyparams.add("accountEnabled", $accountEnabled)
+    if ($accountEnabled)
+    {
+        $bodyparams.add('accountEnabled', $accountEnabled)
     }
-    if ($FirstName) {
-        $bodyparams.add("givenName", $FirstName)
+    if ($FirstName)
+    {
+        $bodyparams.add('givenName', $FirstName)
     }
-    if ($LastName) {
-        $bodyparams.add("surname", $LastName)
+    if ($LastName)
+    {
+        $bodyparams.add('surname', $LastName)
     }
-    if ($DisplayName) {
-        $bodyparams.add("displayName", $DisplayName)
+    if ($DisplayName)
+    {
+        $bodyparams.add('displayName', $DisplayName)
     }
     $Body = [PSCustomObject]@{}
     $body | Add-Member $bodyparams
@@ -559,7 +638,8 @@ function Set-OGUser {
     }
     $quietrun = Invoke-RestMethod @Account_params
 }
-function Get-OGUserLastSignIn {
+function Get-OGUserLastSignIn
+{
     ## ToDo: Review where the data is being pulled from. Signin date seems old
     [CmdletBinding()]
     param (
@@ -576,7 +656,8 @@ function Get-OGUserLastSignIn {
     $response.signInActivity.lastsignindatetime
 }
 # Licenses
-function Get-OGUserSkus {
+function Get-OGUserSkus
+{
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$UserPrincipalName
@@ -589,9 +670,10 @@ function Get-OGUserSkus {
         ContentType = 'application/json'
     }
     $Results = Invoke-RestMethod @Account_params
-    $Results.value | select skuPartNumber, skuid
+    $Results.value | Select-Object skuPartNumber, skuid
 }
-function Get-OGSkus {
+function Get-OGSkus
+{
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
         Uri         = "https://graph.microsoft.com/$GraphVersion/subscribedSkus"
@@ -599,11 +681,12 @@ function Get-OGSkus {
         ContentType = 'application/json'
     }
     $Results = Invoke-RestMethod @Account_params
-    $Results.value | select consumedUnits, skuId, skuPartNumber, prepaidunits
+    $Results.value | Select-Object consumedUnits, skuId, skuPartNumber, prepaidunits
 }
 # Groups
 ## ToDo: Add Set-OGGroup
-function Get-OGGroup {
+function Get-OGGroup
+{
     [CmdletBinding(DefaultParameterSetName = 'OID')]
     param (
         [Parameter(Mandatory = $false,
@@ -613,7 +696,8 @@ function Get-OGGroup {
         [Parameter(Mandatory = $false,
             ParameterSetName = 'All')][Switch]$All
     )
-    if ($ObjectID) {
+    if ($ObjectID)
+    {
         $account_params = @{
             Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
             URI         = "https://graph.microsoft.com/$GraphVersion/groups/$ObjectID"
@@ -622,16 +706,19 @@ function Get-OGGroup {
         }
         Invoke-RestMethod @Account_params
     }
-    if ($SearchDisplayName) {
+    if ($SearchDisplayName)
+    {
         $URI = "https://graph.microsoft.com/$GraphVersion/groups?`$search=`"displayName:$SearchDisplayName`""
         Get-OGNextPage -uri $URI -SearchDisplayName
     }
-    if ($All) {
+    if ($All)
+    {
         $URI = "https://graph.microsoft.com/$GraphVersion/groups"
         Get-OGNextPage -Uri $URI
-    }   
+    }
 }
-function Get-OGGroupMember {
+function Get-OGGroupMember
+{
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$ObjectId
@@ -639,7 +726,8 @@ function Get-OGGroupMember {
     $URI = "https://graph.microsoft.com/$GraphVersion/groups/$ObjectId/members"
     Get-OGNextPage -uri $URI
 }
-function Add-OGGroupMember {
+function Add-OGGroupMember
+{
     ## ToDo: Test UserObjectID param
     [CmdletBinding(DefaultParameterSetName = 'UOID')]
     param (
@@ -651,12 +739,13 @@ function Add-OGGroupMember {
         [Parameter(Mandatory = $false,
             ParameterSetName = 'UOID')]$UserObjectID
     )
-    if ($UserPrincipalName) {
+    if ($UserPrincipalName)
+    {
         $UserObjectID = get-graphuser -UserPrincipalName $UserPrincipalName
     }
     $URI = "https://graph.microsoft.com/$GraphVersion/groups/$GroupObjectID/members/`$ref"
     $Body = [PSCustomObject]@{
-        "@odata.id" = "https://graph.microsoft.com/$GraphVersion/directoryObjects/$($UserObjectID)"
+        '@odata.id' = "https://graph.microsoft.com/$GraphVersion/directoryObjects/$($UserObjectID)"
     }
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
@@ -667,7 +756,8 @@ function Add-OGGroupMember {
     }
     Invoke-RestMethod @Account_params
 }
-function Remove-OGGroupMember {
+function Remove-OGGroupMember
+{
     ## ToDo: Replace GroupID with ObjectId for consistency
     ## ToDo: Replace Member with UserPrincipalName
     ## ToDo: Add UserObjectID param    [CmdletBinding()]
@@ -687,7 +777,8 @@ function Remove-OGGroupMember {
 
 # MAIL
 ## ToDo: Discuss inclusion in module. Its cool, but dangerous. Allows user to send as any user in the tenant. Originally used it to replace Send-Mailmessage since its now considered insecure. The URI can be updated to for "me" instead of setting the SenderID, but if the App registration is using Application perms instead of delegated, I think that will fail.
-function Send-OGMessage {
+function Send-OGMessage
+{
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$Message,
@@ -700,7 +791,7 @@ function Send-OGMessage {
         message         = [PSCustomObject]@{
             subject      = $Subject
             body         = [PSCustomObject]@{
-                contentType = "Text"
+                contentType = 'Text'
                 content     = $Message
             }
             toRecipients = @(
@@ -711,7 +802,7 @@ function Send-OGMessage {
                 }
             )
         }
-        saveToSentItems = "true"
+        saveToSentItems = 'true'
     }
     $account_params = @{
         Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
@@ -720,12 +811,13 @@ function Send-OGMessage {
         Method      = 'POST'
         ContentType = 'application/json'
     }
-    Invoke-RestMethod @Account_params    
+    Invoke-RestMethod @Account_params
 }
 
 # SHAREPOINT ONLINE
 ## ToDo: Do we want to add in WebURL lookup in addtion to the current SiteID params?
-function Get-OGSite {
+function Get-OGSite
+{
     ## ToDo: Check Graph for filter of personal sites in query instead of in PS
     ## ToDo: Fix usablilty language for params all and no personal sites. Setting -All and -NoPersonalSites currently runs All 2x. If no filtering in graph endpoint, then combine All and NoPersonalSites into same IF by adding IF.
     [CmdletBinding(DefaultParameterSetName = 'SID')]
@@ -737,7 +829,8 @@ function Get-OGSite {
         [Parameter(Mandatory = $false,
             ParameterSetName = 'NoOD')][Switch]$AllNoPersonalSites
     )
-    if ($PSBoundParameters.SiteId) {
+    if ($PSBoundParameters.SiteId)
+    {
         $account_params = @{
             Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
             Uri         = "https://graph.microsoft.com/$GraphVersion/sites/$SiteId"
@@ -746,17 +839,20 @@ function Get-OGSite {
         }
         Invoke-RestMethod @Account_params
     }
-    if ($All -and !$SiteId -and !$AllNoPersonalSites) {
+    if ($All -and !$SiteId -and !$AllNoPersonalSites)
+    {
         $URI = "https://graph.microsoft.com/$GraphVersion/sites/?$search=*"
         Get-OGNextPage -uri $URI
     }
-    if ($AllNoPersonalSites -and !$all) {
+    if ($AllNoPersonalSites -and !$all)
+    {
         $URI = "https://graph.microsoft.com/$GraphVersion/sites/?$search=*"
         $all_results = Get-OGNextPage -uri $URI
-        $all_results | Where-Object WebUrl -notlike "*/personal/*"
+        $all_results | Where-Object WebUrl -NotLike '*/personal/*'
     }
 }
-function Get-OGSitePermissions {
+function Get-OGSitePermissions
+{
     ## ToDo: Review this function. I think its retrieving sharing permissions within the site, but I don't remember. Not even sure if it works.
     [CmdletBinding()]
     param (
@@ -771,7 +867,8 @@ function Get-OGSitePermissions {
     $Results = Invoke-RestMethod @Account_params
     $Results.value
 }
-function Get-OGList {
+function Get-OGList
+{
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$SiteId
@@ -779,7 +876,8 @@ function Get-OGList {
     $URI = "https://graph.microsoft.com/$GraphVersion/sites/$SiteId/lists"
     Get-OGNextPage -uri $URI
 }
-function Get-OGListItem {
+function Get-OGListItem
+{
     ## ToDo: Wrap in psobject to include weburl,createdby etc with fields
     [CmdletBinding()]
     param (
@@ -787,12 +885,14 @@ function Get-OGListItem {
         [Parameter(Mandatory)]$ListId,
         [Parameter(Mandatory = $false)]$ItemId
     )
-    if ($ItemId) {
+    if ($ItemId)
+    {
         $URI = "https://graph.microsoft.com/$GraphVersion/sites/$SiteId/lists/$ListId/items?expand=fields"
-        $response = Get-OGNextPage -uri $URI | where id -eq $ItemId
+        $response = Get-OGNextPage -uri $URI | Where-Object id -EQ $ItemId
         $response.fields
     }
-    else {
+    else
+    {
         $URI = "https://graph.microsoft.com/$GraphVersion/sites/$SiteId/lists/$ListId/items?expand=fields"
         $response = Get-OGNextPage -uri $URI
         $response.fields
@@ -801,14 +901,16 @@ function Get-OGListItem {
 
 # HERE BE THE DRAGONS OF SPO
 #Notes: These were written to solve the problem of exporting data in a headless Azure Automation script. Exportto-CSV isn't an option because you can't access the disk of the server after the session is closed. So i wanted "Exportto-SPOList". They work, but were created with the specific scripts i was writing in mind. As a result, they are not fully functional and need a hard review of what they actually do and how, BUT its really useful in certain situations. :)
-function New-OGList {
+function New-OGList
+{
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$SiteId,
         [Parameter(Mandatory)]$Name,
         [Parameter(Mandatory)][Array]$Columns
     )
-    $NewListColumns = @(foreach ($Column in $Columns) {
+    $NewListColumns = @(foreach ($Column in $Columns)
+        {
             $item = [PSCustomObject]@{
                 name = $Column
                 text = [PSCustomObject]@{}
@@ -831,7 +933,8 @@ function New-OGList {
     }
     Invoke-RestMethod @Account_params
 }
-function Get-OGListColumns {
+function Get-OGListColumns
+{
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$SiteId,
@@ -840,7 +943,8 @@ function Get-OGListColumns {
     $URI = "https://graph.microsoft.com/$GraphVersion/sites/$SiteId/lists/$ListId/Columns"
     Get-OGNextPage -uri $URI
 }
-function New-OGListColumn {
+function New-OGListColumn
+{
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$SiteId,
@@ -848,7 +952,8 @@ function New-OGListColumn {
         [Parameter(Mandatory)]$Name,
         [Parameter(Mandatory = $false)]$Description
     )
-    if (!$Description) {
+    if (!$Description)
+    {
         $Body = [PSCustomObject]@{
             description         = [PSCustomObject]@{}
             enforceUniqueValues = $false
@@ -863,7 +968,8 @@ function New-OGListColumn {
             }
         }
     }
-    else {
+    else
+    {
         $Body = [PSCustomObject]@{
             description         = $Description
             enforceUniqueValues = $false
@@ -888,7 +994,8 @@ function New-OGListColumn {
     }
     Invoke-RestMethod @Account_params
 }
-function New-OGListItem {
+function New-OGListItem
+{
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$SiteId,
@@ -907,7 +1014,8 @@ function New-OGListItem {
     }
     Invoke-RestMethod @Account_params
 }
-function Update-OGListItem {
+function Update-OGListItem
+{
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$SiteId,
@@ -925,7 +1033,8 @@ function Update-OGListItem {
     Invoke-RestMethod @Account_params
     # $ItemUpdates | ConvertTo-Json -Depth 5
 }
-function Remove-OGListItem {
+function Remove-OGListItem
+{
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$SiteId,

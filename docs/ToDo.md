@@ -1,0 +1,1 @@
+- Discuss Module dependency for MSAL.PS. Get-MSALTOKEN

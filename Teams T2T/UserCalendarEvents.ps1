@@ -75,12 +75,6 @@ foreach ($userNewTenant in $usersNewTenant) {
                 }
             }
         }
-        [datetime]$time = Get-Date
-        [string]$expiration = Get-JwtPayload -jwt $GraphAPIKey | ConvertFrom-Json | Select-Object -ExpandProperty exp
-        $expirationConverted = [timezone]::CurrentTimeZone.ToLocalTime(([datetime]'1/1/1970').AddSeconds($expiration))
-        $tokenRefreshTime = $expirationConverted - $time
-        if ($tokenRefreshTime.Minutes -lt 30) {
-            Get-OGAPIKey -ApplicationID $applicationID -TenantId $tenantId -AccessSecret $accessSecret
-        }
+        Update-OGAPIKey
     }
 }

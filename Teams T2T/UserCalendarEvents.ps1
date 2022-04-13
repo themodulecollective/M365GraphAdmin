@@ -75,6 +75,6 @@ foreach ($userNewTenant in $usersNewTenant) {
                 }
             }
         }
-        Update-OGAPIKey
     }
+    Update-OGAPIKey
 }

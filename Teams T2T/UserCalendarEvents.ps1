@@ -1,4 +1,4 @@
-### TODO: RECURRENCE, Logging, Attachments, Wiki?, location
+### TODO: RECURRENCE, Logging, Attachments, Wiki, location
 # Dependency Module
 Install-Module JWT
 Import-Module JWT

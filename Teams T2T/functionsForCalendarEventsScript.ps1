@@ -1,5 +1,4 @@
 $Script:GraphVersion = "v1.0"
-
 function Get-OGNextPage {
     [CmdletBinding()]
     param (
@@ -153,6 +152,7 @@ function Convert-OGUserEvent {
         $location = [PSCustomObject]@{
             displayName = $event.location.displayName
         }
+        $body.location.displayName = $location
     }
     if ($event.attendees) {
         $array = @(

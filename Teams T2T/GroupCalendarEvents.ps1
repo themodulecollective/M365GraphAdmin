@@ -41,4 +41,5 @@ foreach ($groupNewTenant in $groupsNewTenant) {
             Get-OGAPIKey -ApplicationID $applicationID -TenantId $tenantId -AccessSecret $accessSecret
         }
     }
+    Update-OGAPIKey
 }

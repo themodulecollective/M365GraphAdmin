@@ -1,5 +1,4 @@
 $Script:GraphVersion = "v1.0"
-
 function Get-OGNextPage {
     [CmdletBinding()]
     param (
@@ -38,6 +37,17 @@ function Get-OGAPIKey {
     } 
     $ConnectGraph = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token" -Method POST -Body $Body
     $Script:GraphAPIKey = $ConnectGraph.access_token
+}
+function Update-OGAPIKey {
+    [CmdletBinding()]
+    param ()
+    [datetime]$time = Get-Date
+    [string]$expiration = Get-JwtPayload -jwt $GraphAPIKey | ConvertFrom-Json | Select-Object -ExpandProperty exp
+    $expirationConverted = [timezone]::CurrentTimeZone.ToLocalTime(([datetime]'1/1/1970').AddSeconds($expiration))
+    $tokenRefreshTime = $expirationConverted - $time
+    if ($tokenRefreshTime.Minutes -lt 30) {
+        Get-OGAPIKey -ApplicationID $applicationID -TenantId $tenantId -AccessSecret $accessSecret
+    }
 }
 function Get-OGUser {
     [CmdletBinding(DefaultParameterSetName = 'UPN')]
@@ -142,6 +152,7 @@ function Convert-OGUserEvent {
         $location = [PSCustomObject]@{
             displayName = $event.location.displayName
         }
+        $body.location.displayName = $location
     }
     if ($event.attendees) {
         $array = @(

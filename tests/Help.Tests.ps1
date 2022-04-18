@@ -1,5 +1,5 @@
-$Script:ModuleName = 'InstallManager'
-$CommandName = $MyInvocation.MyCommand.Name.Replace(".Tests.ps1", "")
+$Script:ModuleName = 'OGraph'
+$CommandName = $MyInvocation.MyCommand.Name.Replace('.Tests.ps1', '')
 Write-Information -MessageData "Command is $CommandName" -InformationAction Continue
 Write-Information -MessageData "Module Name is $Script:ModuleName" -InformationAction Continue
 $Script:ProjectRoot = $(Split-Path -Path $PSScriptRoot -Parent)
@@ -26,11 +26,11 @@ Describe "Public commands in $script:ModuleName have comment-based or external h
     foreach ($node in $help)
     {
         Context $node.Name {
-            It "Should have a Description or Synopsis" {
+            It 'Should have a Description or Synopsis' {
                 ($node.Description + $node.Synopsis) | Should Not BeNullOrEmpty
             }
 
-            It "Should have an Example" {
+            It 'Should have an Example' {
                 $node.Examples | Should Not BeNullOrEmpty
                 $node.Examples | Out-String | Should -Match ($node.Name)
             }

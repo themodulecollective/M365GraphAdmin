@@ -1,5 +1,5 @@
-$Script:ModuleName = 'InstallManager'
-$CommandName = $MyInvocation.MyCommand.Name.Replace(".Tests.ps1", "")
+$Script:ModuleName = 'OGraph'
+$CommandName = $MyInvocation.MyCommand.Name.Replace('.Tests.ps1', '')
 Write-Information -MessageData "Command is $CommandName" -InformationAction Continue
 Write-Information -MessageData "Module Name is $Script:ModuleName" -InformationAction Continue
 $Script:ProjectRoot = $(Split-Path -Path $PSScriptRoot -Parent)
@@ -16,7 +16,7 @@ Remove-Module -Name $Script:ModuleName -Force -ErrorAction SilentlyContinue
 Write-Information -MessageData "Import Module $Script:ModuleName" -InformationAction Continue
 Import-Module -Name $Script:ModuleSettingsFile -Force
 
-Describe "Public commands have Pester tests" -Tag 'Build' {
+Describe 'Public commands have Pester tests' -Tag 'Build' {
     $commands = Get-Command -Module $Script:ModuleName
 
     foreach ($command in $commands.Name)

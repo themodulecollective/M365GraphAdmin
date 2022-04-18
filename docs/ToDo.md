@@ -1,1 +1,7 @@
 - Discuss Module dependency for MSAL.PS. Get-MSALTOKEN
+- ACCESS TOKENS: Function to trigger Auth flow to existing module with application permissions for functions in this module
+- ACCESS TOKENS: Combine all into single function Get-GraphAccessToken?
+- Add Set-OGGroup
+- MAIL: Send-OGMessage.  Discuss inclusion in module. Its cool, but dangerous. Allows user to send as any user in the tenant. Originally used it to replace Send-Mailmessage since its now considered insecure. The URI can be updated to for "me" instead of setting the SenderID, but if the App registration is using Application perms instead of delegated, I think that will fail.
+- SHAREPOINT ONLINE: Do we want to add in WebURL lookup in addtion to the current SiteID params?
+- REVIEW: New-OGList, Get-OGListColumns, New-OGListColumn, New-OGListItem, Update-OGListItem, Remove-OGListItem

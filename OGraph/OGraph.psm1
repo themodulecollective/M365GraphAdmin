@@ -1,17 +1,3 @@
-# Sections:
-# Helper Functions - Not for inclusion in User Import
-# Access Tokens
-# AzureAD Administration
-# Users
-# Licenses
-# Groups
-# Mail
-# SharePoint Online
-# Here Be the Dragons of SPO
-
-
-# HELPER FUNCTIONS
-
 function Get-OGNextPage
 {
     [CmdletBinding()]
@@ -39,11 +25,6 @@ function Get-OGNextPage
         $Result.Value
     }
 }
-
-# ACCESS TOKENS
-## ToDo: Function to trigger Auth flow to existing module with application permissions for functions in this module
-## ToDo: Combine all into single function Get-GraphAccessToken?
-
 
 function Set-OGVersion
 {
@@ -684,7 +665,7 @@ function Get-OGSkus
     $Results.value | Select-Object consumedUnits, skuId, skuPartNumber, prepaidunits
 }
 # Groups
-## ToDo: Add Set-OGGroup
+
 function Get-OGGroup
 {
     [CmdletBinding(DefaultParameterSetName = 'OID')]
@@ -775,8 +756,6 @@ function Remove-OGGroupMember
     Invoke-RestMethod @Account_params
 }
 
-# MAIL
-## ToDo: Discuss inclusion in module. Its cool, but dangerous. Allows user to send as any user in the tenant. Originally used it to replace Send-Mailmessage since its now considered insecure. The URI can be updated to for "me" instead of setting the SenderID, but if the App registration is using Application perms instead of delegated, I think that will fail.
 function Send-OGMessage
 {
     [CmdletBinding()]
@@ -814,8 +793,6 @@ function Send-OGMessage
     Invoke-RestMethod @Account_params
 }
 
-# SHAREPOINT ONLINE
-## ToDo: Do we want to add in WebURL lookup in addtion to the current SiteID params?
 function Get-OGSite
 {
     ## ToDo: Check Graph for filter of personal sites in query instead of in PS
@@ -899,8 +876,7 @@ function Get-OGListItem
     }
 }
 
-# HERE BE THE DRAGONS OF SPO
-#Notes: These were written to solve the problem of exporting data in a headless Azure Automation script. Exportto-CSV isn't an option because you can't access the disk of the server after the session is closed. So i wanted "Exportto-SPOList". They work, but were created with the specific scripts i was writing in mind. As a result, they are not fully functional and need a hard review of what they actually do and how, BUT its really useful in certain situations. :)
+
 function New-OGList
 {
     [CmdletBinding()]

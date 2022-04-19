@@ -4,7 +4,7 @@ param(
 )
 
 $Script:ModuleInstallScope = 'CurrentUser'
-$Script:ModuleName = 'InstallManager'
+$Script:ModuleName = 'OGraph'
 
 'Starting build...'
 'Installing module dependencies...'

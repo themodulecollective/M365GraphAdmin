@@ -1,8 +1,9 @@
 Function Add-OGGroupMember
 {
-    
-    ## ToDo: Test UserObjectID param
+
+    # ToDo: Test UserObjectID param
     [CmdletBinding(DefaultParameterSetName = 'UOID')]
+
     param (
         [Parameter(Mandatory,
             ParameterSetName = 'UOID')]

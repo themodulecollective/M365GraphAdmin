@@ -1,3 +1,4 @@
+# currently broken. No sure why yet.
 Function Send-OGMessage
 {
     
@@ -6,8 +7,7 @@ Function Send-OGMessage
         [Parameter(Mandatory)]$Message,
         [Parameter(Mandatory)]$Subject,
         [Parameter(Mandatory)]$Recipient,
-        [Parameter(Mandatory)]$SenderID,
-        [Parameter(Mandatory = $false)]$Cc
+        [Parameter(Mandatory)]$SenderID
     )
     $Body = [PSCustomObject]@{
         message         = [PSCustomObject]@{
@@ -27,13 +27,11 @@ Function Send-OGMessage
         saveToSentItems = 'true'
     }
     $account_params = @{
-        Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
+        Headers     = @{Authorization = "Bearer $Key" }
         Uri         = "https://graph.microsoft.com/$GraphVersion/users/$UserID/sendMail"
         body        = $Body | ConvertTo-Json -Depth 10
         Method      = 'POST'
-        ContentType = 'application/json'
     }
-    Invoke-RestMethod @Account_params
-
+    Invoke-GraphRequest @Account_params
 }
 

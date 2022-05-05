@@ -1,6 +1,26 @@
+<#
+.SYNOPSIS
+Get groups from Azure AD
+.DESCRIPTION
+Long description
+
+.PARAMETER ObjectID
+Parameter description
+
+.PARAMETER SearchDisplayName
+Parameter description
+
+.PARAMETER All
+Parameter description
+
+.EXAMPLE
+An example
+
+.NOTES
+General notes
+#>
 Function Get-OGGroup
 {
-    
     [CmdletBinding(DefaultParameterSetName = 'OID')]
     param (
         [Parameter(Mandatory = $false,
@@ -13,23 +33,21 @@ Function Get-OGGroup
     if ($ObjectID)
     {
         $account_params = @{
-            Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-            URI         = "https://graph.microsoft.com/$GraphVersion/groups/$ObjectID"
+            Headers     = @{Authorization = "Bearer $Key" }
+            URI         = "/$GraphVersion/groups/$ObjectID"
             Method      = 'GET'
-            ContentType = 'application/json'
+            OutputType      = 'PSObject'
         }
-        Invoke-RestMethod @Account_params
+        Invoke-GraphRequest @Account_params
     }
     if ($SearchDisplayName)
     {
-        $URI = "https://graph.microsoft.com/$GraphVersion/groups?`$search=`"displayName:$SearchDisplayName`""
+        $URI = "/$GraphVersion/groups?`$search=`"displayName:$SearchDisplayName`""
         Get-OGNextPage -uri $URI -SearchDisplayName
     }
     if ($All)
     {
-        $URI = "https://graph.microsoft.com/$GraphVersion/groups"
+        $URI = "/$GraphVersion/groups"
         Get-OGNextPage -Uri $URI
     }
-
 }
-

@@ -1,19 +1,31 @@
-Function Get-OGUserSkus
-{
-    
+<#
+.SYNOPSIS
+Get Azure AD skus for individual user
+
+.DESCRIPTION
+Long description
+
+.PARAMETER UserPrincipalName
+Parameter description
+
+.EXAMPLE
+An example
+
+.NOTES
+General notes
+#>
+Function Get-OGUserSkus {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]$UserPrincipalName
     )
-    $user = get-graphuser -UserPrincipalName $UserPrincipalName
+    $user = Get-OGUser -UserPrincipalName $UserPrincipalName
     $account_params = @{
-        Headers     = @{Authorization = "Bearer $($GraphAPIKey)" }
-        Uri         = "https://graph.microsoft.com/$GraphVersion/Users/$($user.Id)/licenseDetails"
-        Method      = 'GET'
-        ContentType = 'application/json'
+        Headers    = @{Authorization = "Bearer $Key" }
+        Uri        = "$GraphVersion/Users/$($user.Id)/licenseDetails"
+        Method     = 'GET'
+        OutputType = 'PSObject'
     }
-    $Results = Invoke-RestMethod @Account_params
-    $Results.value | Select-Object skuPartNumber, skuid
-
+    $Results = Invoke-GraphRequest @Account_params
+    $Results.value
 }
-

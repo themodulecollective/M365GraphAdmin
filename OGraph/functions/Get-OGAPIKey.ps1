@@ -1,3 +1,25 @@
+<#
+.SYNOPSIS
+Get API Token from Azure AD app
+
+.DESCRIPTION
+Long description
+
+.PARAMETER ApplicationID
+Parameter description
+
+.PARAMETER TenantId
+Parameter description
+
+.PARAMETER AccessSecret
+Parameter description
+
+.EXAMPLE
+An example
+
+.NOTES
+General notes
+#>
 Function Get-OGAPIKey
 {
     
@@ -15,6 +37,4 @@ Function Get-OGAPIKey
     }
     $ConnectGraph = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token" -Method POST -Body $Body
     $Script:GraphAPIKey = $ConnectGraph.access_token
-
 }
-

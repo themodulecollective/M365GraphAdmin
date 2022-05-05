@@ -10,7 +10,7 @@ Function Set-OGUser
         [Parameter(Mandatory = $false)][String]$LastName,
         [Parameter(Mandatory = $false)][String]$DisplayName
     )
-    $User = Get-GraphUser -UserPrincipalName $UserPrincipalName
+    $User = Get-OGUser -UserPrincipalName $UserPrincipalName
     $bodyparams = @{}
     if ($NewUserPrincipalName)
     {
@@ -41,7 +41,7 @@ Function Set-OGUser
         Method      = 'PATCH'
         ContentType = 'application/json'
     }
-    $quietrun = Invoke-RestMethod @Account_params
+    $quietrun = Invoke-GraphRequest @Account_params
 
 }
 

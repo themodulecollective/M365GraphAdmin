@@ -8,12 +8,12 @@ Function Get-OGGroupEvents
     if ($filter)
     {
 
-        $URI = "https://graph.microsoft.com/$GraphVersion/groups/$GroupId/events?`$filter=$filter"
+        $URI = "/$GraphVersion/groups/$GroupId/events?`$filter=$filter"
         Get-OGNextPage -URI $URI
     }
     else
     {
-        $URI = "https://graph.microsoft.com/$GraphVersion/groups/$GroupId/events"
+        $URI = "/$GraphVersion/groups/$GroupId/events"
         Get-OGNextPage -URI $URI
     }
 

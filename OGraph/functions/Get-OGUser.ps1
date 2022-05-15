@@ -33,10 +33,10 @@ Function Get-OGUser {
     )
     if ($UserPrincipalName) {
         $account_params = @{
-            Headers     = @{Authorization = "Bearer $Key" }
-            URI         = "/$GraphVersion/users/$userprincipalname"
-            Method      = 'GET'
-            OutputType      = 'PSObject'
+            Headers    = @{Authorization = "Bearer $Key" }
+            URI        = "/$GraphVersion/users/$userprincipalname"
+            Method     = 'GET'
+            OutputType = 'PSObject'
         }
         Invoke-GraphRequest @Account_params
     }

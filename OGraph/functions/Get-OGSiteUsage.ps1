@@ -1,4 +1,4 @@
-function Get-OGUserDriveValidation {
+function Get-OGSiteUsage {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $False, ParameterSetName = 'multiUser')][psobject[]]
@@ -11,7 +11,7 @@ function Get-OGUserDriveValidation {
         [Parameter(Mandatory, ParameterSetName = 'singleUser')]
         $TenantName,
         [Parameter(Mandatory = $false)]$ExportPath,
-        [Parameter(Mandatory = $False, ParameterSetName = 'multiUser')][Int]$ValidationLimit,
+        [Parameter(Mandatory, ParameterSetName = 'multiUser')][Int]$ValidationLimit,
         [Switch]$PnPPowershell
         
     )
@@ -39,10 +39,10 @@ function Get-OGUserDriveValidation {
                         $target = $target.weburl
                     }
                     if ($target -like $TenantURL) {
-                        $item | Select-Object *, @{Name = 'targetODurl'; Expression = { $target } }
+                        $_ | Select-Object *, @{Name = 'targetODurl'; Expression = { $target } }
                     }
                     else {
-                        $item | Select-Object *, @{Name = 'targetODurl'; Expression = { $null } }
+                        $_ | Select-Object *, @{Name = 'targetODurl'; Expression = { $null } }
                     }
                     $target = $null
                 })

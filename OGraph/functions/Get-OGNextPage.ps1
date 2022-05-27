@@ -1,5 +1,4 @@
-Function Get-OGNextPage
-{
+Function Get-OGNextPage {
     
     [CmdletBinding()]
     param (
@@ -12,17 +11,14 @@ Function Get-OGNextPage
         Method      = 'GET'
         ContentType = 'application/json'
     }
-    if ($SearchDisplayName)
-    {
+    if ($SearchDisplayName) {
         $account_params.headers.add('ConsistencyLevel', 'eventual')
     }
     $Result = Invoke-RestMethod @Account_params
-    if ($results.'@odata.nextlink')
-    {
-        Get-OGNextPage -Uri $results.'@odata.nextlink'
+    if ($result.'@odata.nextlink') {
+        Get-OGNextPage -Uri $result.'@odata.nextlink'
     }
-    elseif (!$results.'@odata.nextlink')
-    {
+    elseif (!$result.'@odata.nextlink') {
         $Result.Value
     }
 

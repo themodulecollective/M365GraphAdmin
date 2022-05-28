@@ -20,8 +20,7 @@ An example
 .NOTES
 General notes
 #>
-Function Get-OGAPIKey
-{
+Function Get-OGAPIKey {
     
     [CmdletBinding()]
     param (
